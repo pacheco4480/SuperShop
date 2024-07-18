@@ -9,6 +9,11 @@ namespace SuperShop.Data.Entities
         //a chave primaria com este nome Id
         public int Id { get; set; }
 
+        //Este Required faz com que seja obrigatorio preencher o Nome do produto
+        [Required]
+        //O nome do produto só poderá ter no máximo 50 caracteres
+        //{0} é o primeiro parametro que neste caso é o Name, {1} é o segundo parametro que vai buscar o numero 50
+        [MaxLength(50, ErrorMessage ="The field {0} can contain {1} characters lenght.")]
         public string Name { get; set; }
 
         //Usando este DisplayFormat significa que vai formatar com duas casas decimais em modo
@@ -22,10 +27,11 @@ namespace SuperShop.Data.Entities
 
 
         [Display(Name = "Last Purchase")]
-        public DateTime LastPurchase { get; set; }
+        //Pondo o "?" em frente do DateTime torna opcional a inserçao da data
+        public DateTime? LastPurchase { get; set; }
 
         [Display(Name = "Last Sale")]
-        public DateTime LastSale { get; set; }
+        public DateTime? LastSale { get; set; }
 
         [Display(Name = "Is Available")]
         public bool IsAvailable { get; set; }
