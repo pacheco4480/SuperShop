@@ -30,6 +30,10 @@ namespace SuperShop
             {   //Aqui vai buscar a connectionString que temos no ficheiro appsettings.json
                 cfg.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection"));
             });
+            //Aqui na pratica estamos a fazer o seguinte quando alguem perguntar pelo SeedDb ele vai cria-lo
+            //Usamos o AddTransient pois so vai ser usado uma vez e depois de usado deixa de estar em memoria 
+            services.AddTransient<SeedDb>();
+
             services.AddControllersWithViews();
         }
 
