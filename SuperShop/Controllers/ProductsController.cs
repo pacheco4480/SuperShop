@@ -12,25 +12,23 @@ namespace SuperShop.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly IRepository _repository;
+        private readonly IProductRepository _productRepository;
 
-        //Ctrl  + . em cima do repository e clicar em "Create and assign field repository"
-        public ProductsController(IRepository repository)
+        //Ctrl  + . em cima do repository e clicar em "Create and assign field productRepository"
+        public ProductsController(IProductRepository productRepository)
         {
-            _repository = repository;
+            _productRepository = productRepository;
         }
 
         // GET: Products
-        //Retorna a View e vai buscar todos os Produtos
-        //esta accion Index a unica coisa que faz vai ao _repository vai à propriedade dos Products e
-        //traz todos os produtos ToListAsync para dentro da view
         public IActionResult Index()
         {
-            return View(_repository.GetProducts());
+            // Retorna a View e vai buscar todos os produtos usando o método GetAll do repositório
+            return View(_productRepository.GetAll());
         }
 
         // GET: Products/Details/5
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
             {
@@ -40,7 +38,7 @@ namespace SuperShop.Controllers
             //Aqui pomos o .Value no id para quando o valor for nulo a aplicaçao nao crashar
             //Sempre que o parametro estiver como opcional que é o que acontece aqui pois em cima
             //tem "int?" em que o "?" significa que o utilizador pode ou nao colcar o id temos que por .Value para nao crashar
-            var product = _repository.GetProduct(id.Value);
+            var product = await _productRepository.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -68,9 +66,7 @@ namespace SuperShop.Controllers
         {   //Aqui vê se o produto é valido cumprindo as regras que demos no ficheiro Product.cs
             if (ModelState.IsValid)
             {   //Se o produto for válido adicionamos o produto em memoria (nao grava na base de dados fica pendente)
-                _repository.AddProduct(product);
-                //O produto só é gravado aqui na base de dados e de uma forma assincrona
-                await _repository.SaveAllAsync();
+                await _productRepository.CreateAsync(product);
                 //No final de gravar redireciona para accion Index
                 return RedirectToAction(nameof(Index));
             }
@@ -83,14 +79,14 @@ namespace SuperShop.Controllers
         //Aqui temos o "?" que serve para nao forçar a pessoa a por um ID e deixar passar em branco sendo opcional
         //sendo assim nao é preciso ter um ID exemplo: podendo ficar assim "https://localhost:44369/Products/edit" na vez de 
         //"https://localhost:44369/Products/edit/1"
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {   //Se o Id for nulo retornaNotFound
             if (id == null)
             {
                 return NotFound();
             }
             //Se o ID nao for nulo vai ver á tabela se o ID existe
-            var product = _repository.GetProduct(id.Value);
+            var product = await _productRepository.GetByIdAsync(id.Value);
             //Aqui volta de novo a verificar o ID 
             if (product == null)
             {
@@ -118,15 +114,13 @@ namespace SuperShop.Controllers
             {
                 try
                 {   //faz o update do produto
-                    _repository.UpdateProduct(product);
-                    //Grava o produto
-                    await _repository.SaveAllAsync();
+                    await _productRepository.UpdateAsync(product);
                 }
                 //Caso aconteça alguma coisa mal vê o que se passou
                 catch (DbUpdateConcurrencyException)
                 {//Se acontecer alguma coisa mal vai verificar o ID pois como na web pode haver muitas pessoas a trabalhar em
                  //simultaneo e se por exemplo eu tiver a preencher mas alguem ja apagou o produto tendo esta validação a app nao rebenta
-                    if (!_repository.ProductExists(product.Id))
+                    if (! await _productRepository.ExistAsync(product.Id))
                     {
                         return NotFound();
                     }
@@ -143,14 +137,14 @@ namespace SuperShop.Controllers
         }
 
         // GET: Products/Delete/5
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {   //Se o Id nao existe retorna NotFound
             if (id == null)
             {
                 return NotFound();
             }
             //SE o ID existe vai buscar à tabela
-            var product = _repository.GetProduct(id.Value);
+            var product = await _productRepository.GetByIdAsync(id.Value);
             //Se nao econtra o Produto NotFOund
             if (product == null)
             {
@@ -166,11 +160,9 @@ namespace SuperShop.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = _repository.GetProduct(id);
+            var product = await _productRepository.GetByIdAsync(id);
             //Aqui remove em memória
-            _repository.RemoveProduct(product);
-            //Aqui vai à base de dados
-            await _repository.SaveAllAsync();
+            await _productRepository.DeleteAsync(product);
             //Depois quando apagar redireciona para a view Index
             return RedirectToAction(nameof(Index));
         }

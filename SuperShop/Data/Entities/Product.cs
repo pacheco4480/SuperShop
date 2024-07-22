@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SuperShop.Data.Entities
 {
-    public class Product
+    //IEntity é a Interface que estamos a implementar na class Product
+    public class Product : IEntity
     {   //Quando fazemos este Id nao precisamos de fazer mais nada, mas tem que ser só Id
         //ele atraves do nome Id deteta que é um id inteiro e automaticamente atribui
         //a chave primaria com este nome Id

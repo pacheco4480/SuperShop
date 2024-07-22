@@ -34,11 +34,11 @@ namespace SuperShop
             //Usamos o AddTransient pois so vai ser usado uma vez e depois de usado deixa de estar em memoria 
             //Este é criado e depois desaparece
             services.AddTransient<SeedDb>();
-            //Assim que detetar que é preciso um Repositorio ele vai automaticamente criar sem ser preciso instanciar
-            //Qaundo for preciso compila o Repositorio e quando necessario injeta a classe Repository
-            //Este é pode ser criado varias vezes exemplo: clico na aba produtos na navbar ele cria um objeto produtos
-            //mas se voltar a clicar de novo ele apaga esse objecto e cria novamente um objeto produtos
-            services.AddScoped<IRepository, Repository>();
+            // Assim que detectar que é preciso um repositório de produtos, ele vai automaticamente criar uma instância de ProductRepository
+            // Usamos AddScoped porque este serviço pode ser criado várias vezes durante o tempo de vida de uma requisição HTTP
+            // Exemplo: se um usuário clicar na aba de produtos na navbar, ele cria um objeto ProductRepository
+            // Se o usuário clicar novamente, ele apaga o objeto antigo e cria um novo objeto ProductRepository
+            services.AddScoped<IProductRepository, ProductRepository>();
 
 
             services.AddControllersWithViews();
