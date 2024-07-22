@@ -1,12 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SuperShop.Data.Entities;
 using System.Data.Common;
 
 namespace SuperShop.Data
 {
-    //Para pudermos usar a herança temos que dizer que a nossa DataContext vai herdar da deles DbContext
-    public class DataContext : DbContext
+    //Para pudermos usar a herança temos que dizer que a nossa DataContext vai herdar da deles IdentityDbContext e injeta o nosso User
+    //"Ctrl + ." em IdentityDbContext e instalar Microsoft.AspNetCore.Identity.EntityFrameworkCore
+    public class DataContext : IdentityDbContext<User>
     {
 
         //Propriedade que vai ficar responsável pela tabela

@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SuperShop.Data;
+using SuperShop.Data.Entities;
+using SuperShop.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +28,31 @@ namespace SuperShop
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //Serviço de Identidade do Utilizador
+            //Estamos a usar a nossa entidade User mas a entidade IdentityRole é a do programa
+            //Aqui estamos a usar a nosso entidade USer pois acresecntamos as propriedades FirstName e Lastname às propriedades predefenidadas
+            //Caso nao quisessemos acrescentar propriedades às propriedades predefenidas bastava por "IdentityUser, IdentityRole"
+            services.AddIdentity<User, IdentityRole>(cfg =>
+            {   //Aqui teoricamente deveria ser tudo true para fortelecer a password mas vamos optar por fazer
+                //assim para puder testar mais facilmente a criaçao dos utilizadores
+                //Nao pode haver email repetidos
+                cfg.User.RequireUniqueEmail = true;
+
+                cfg.Password.RequireDigit = false;
+
+                cfg.Password.RequiredUniqueChars = 0;
+
+                cfg.Password.RequireUppercase = false;
+
+                cfg.Password.RequireLowercase = false;
+
+                cfg.Password.RequireNonAlphanumeric = false;
+
+                cfg.Password.RequiredLength = 6;
+            })
+                .AddEntityFrameworkStores<DataContext>();
+            
+
             //Cria um serviço que utilize o nosso DataContext que vai usar o SQL Server com a connection string
             services.AddDbContext<DataContext>(cfg =>
             {   //Aqui vai buscar a connectionString que temos no ficheiro appsettings.json
@@ -34,6 +62,9 @@ namespace SuperShop
             //Usamos o AddTransient pois so vai ser usado uma vez e depois de usado deixa de estar em memoria 
             //Este é criado e depois desaparece
             services.AddTransient<SeedDb>();
+
+            services.AddScoped<IUserHelper, UserHelper>();
+
             // Assim que detectar que é preciso um repositório de produtos, ele vai automaticamente criar uma instância de ProductRepository
             // Usamos AddScoped porque este serviço pode ser criado várias vezes durante o tempo de vida de uma requisição HTTP
             // Exemplo: se um usuário clicar na aba de produtos na navbar, ele cria um objeto ProductRepository
@@ -61,6 +92,8 @@ namespace SuperShop
             app.UseStaticFiles();
 
             app.UseRouting();
+            //Chamar o serviço que criamos de autenticação
+            app.UseAuthorization();
 
             app.UseAuthorization();
 

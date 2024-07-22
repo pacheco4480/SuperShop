@@ -10,7 +10,5 @@
         //Neste exercicio nao vamos utilizar esta propriedade
         //bool WasDeleted { get; set; }
 
-
-
     }
 }

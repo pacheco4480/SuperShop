@@ -13,7 +13,7 @@ namespace SuperShop.Data
         private readonly DataContext _context;
 
         // Construtor da classe
-        // "Ctrl + ." em cima do repository e clicar em "Create and assign field context" vai criar este construtor automaticamente
+        // "Ctrl + ." em cima do context e clicar em "Create and assign field context" vai criar este construtor automaticamente
         public GenericRepository(DataContext context)
         {
             _context = context;

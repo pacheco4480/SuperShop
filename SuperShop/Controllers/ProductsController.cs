@@ -7,24 +7,30 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SuperShop.Data;
 using SuperShop.Data.Entities;
+using SuperShop.Helpers;
 
 namespace SuperShop.Controllers
 {
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;
+        private readonly IUserHelper _userHelper;
 
-        //Ctrl  + . em cima do repository e clicar em "Create and assign field productRepository"
-        public ProductsController(IProductRepository productRepository)
+        //Ctrl  + . em cima do productRepository e clicar em "Create and assign field productRepository"
+        //Ctrl  + . em cima do userHelper e clicar em "Create and assign field userHelper"
+
+        public ProductsController(IProductRepository productRepository, IUserHelper userHelper)
         {
             _productRepository = productRepository;
+            _userHelper = userHelper;
         }
 
         // GET: Products
         public IActionResult Index()
         {
-            // Retorna a View e vai buscar todos os produtos usando o método GetAll do repositório
-            return View(_productRepository.GetAll());
+            // Retorna a View e vai buscar todos os produtos usando o método GetAll do repositório e ordena
+            //os produtos por nome
+            return View(_productRepository.GetAll().OrderBy(p => p.Name));
         }
 
         // GET: Products/Details/5
@@ -65,7 +71,9 @@ namespace SuperShop.Controllers
         public async Task<IActionResult> Create(Product product)
         {   //Aqui vê se o produto é valido cumprindo as regras que demos no ficheiro Product.cs
             if (ModelState.IsValid)
-            {   //Se o produto for válido adicionamos o produto em memoria (nao grava na base de dados fica pendente)
+            {   //TODO: Modifiar para o user que estiver logado
+                product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
+                //Se o produto for válido adicionamos o produto em memoria (nao grava na base de dados fica pendente)
                 await _productRepository.CreateAsync(product);
                 //No final de gravar redireciona para accion Index
                 return RedirectToAction(nameof(Index));
@@ -113,7 +121,10 @@ namespace SuperShop.Controllers
             if (ModelState.IsValid)
             {
                 try
-                {   //faz o update do produto
+                {
+                    //TODO: Modifiar para o user que estiver logado
+                    product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
+                    //faz o update do produto
                     await _productRepository.UpdateAsync(product);
                 }
                 //Caso aconteça alguma coisa mal vê o que se passou
