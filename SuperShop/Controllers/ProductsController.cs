@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using SuperShop.Data;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
+using SuperShop.Models;
 
 namespace SuperShop.Controllers
 {
@@ -68,10 +70,37 @@ namespace SuperShop.Controllers
         //modelo e manda-la para a base de dados
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
+        public async Task<IActionResult> Create(ProductViewModel model)
         {   //Aqui vê se o produto é valido cumprindo as regras que demos no ficheiro Product.cs
             if (ModelState.IsValid)
-            {   //TODO: Modifiar para o user que estiver logado
+            {
+                //Carregar as Imagens
+                var path = string.Empty;
+                //Caso tenha uma imagem
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
+                {   //Aqui gera uma chave aleatoria que no vai dar um objeto do tipo Guid e vamos converter em string
+                    //Isto faz com que seja gerado um nome 
+                    var guid = Guid.NewGuid().ToString();
+                    var file = $"{guid}.jpg";
+
+                    path = Path.Combine(
+                           Directory.GetCurrentDirectory(),
+                           "wwwroot\\images\\products",
+                           file);
+
+                    //Gravar
+                    using(var stream = new FileStream(path, FileMode.Create))
+                    {   //Na pratica sera aqui que vai guardar
+                        await model.ImageFile.CopyToAsync(stream);
+                    }
+                    //Este será o caminho que vai ser guardado na base de dados
+                    path = $"~/images/products/{file}";
+                }
+
+                //Converter o ProductViewModel em Product
+                var product = this.ToProduct(model, path);
+
+                //TODO: Modifiar para o user que estiver logado
                 product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
                 //Se o produto for válido adicionamos o produto em memoria (nao grava na base de dados fica pendente)
                 await _productRepository.CreateAsync(product);
@@ -80,7 +109,24 @@ namespace SuperShop.Controllers
             }
             //Se acontecer algum problema com o produta nao passando nas validaçoes mostra a mesma View mas deixa lá
             //ficar o produta para a pessoa não estar a escrever tudo de novo
-            return View(product);
+            return View(model);
+        }
+
+        //Conversão do ProductViewModel em Product
+        private Product ToProduct(ProductViewModel model, string path)
+        {
+            return new Product
+            {
+                Id = model.Id,
+                ImageUrl = path,
+                IsAvailable = model.IsAvailable,
+                LastPurchase = model.LastPurchase,
+                LastSale = model.LastSale,
+                Name = model.Name,
+                Price = model.Price,
+                Stock = model.Stock,
+                User = model.User
+            };
         }
 
         // GET: Products/Edit/5
@@ -100,8 +146,26 @@ namespace SuperShop.Controllers
             {
                 return NotFound();
             }
-            //se encontrar o produto retorna view e manda o produto
-            return View(product);
+
+            var model = this.ToProductViewModel(product);
+
+            //se encontrar o produto retorna view e manda o model
+            return View(model);
+        }
+
+        private ProductViewModel ToProductViewModel(Product product)
+        {
+            return new ProductViewModel { 
+                Id = product.Id, 
+                ImageUrl = product.ImageUrl, 
+                IsAvailable = product.IsAvailable, 
+                LastPurchase = product.LastPurchase, 
+                LastSale = product.LastSale,
+                Name = product.Name,
+                Price = product.Price,
+                Stock = product.Stock,
+                User = product.User
+            };      
         }
 
         // POST: Products/Edit/5
@@ -110,18 +174,40 @@ namespace SuperShop.Controllers
         //Isto é chamado quando carregamos no botao submit do Edit.cshtml, recebendo o id e o produto
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product product)
-        {   //Vemos se o id existe ou nao
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
-
+        public async Task<IActionResult> Edit(ProductViewModel model)
+        {   
             //caso esteja tudo ok vemos se o Modelo é valido
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var path = model.ImageUrl;
+
+                    //Caso tenha uma imagem
+                    if (model.ImageFile != null && model.ImageFile.Length > 0)
+                    {
+                        //Aqui gera uma chave aleatoria que no vai dar um objeto do tipo Guid e vamos converter em string
+                        //Isto faz com que seja gerado um nome 
+                        var guid = Guid.NewGuid().ToString();
+                        var file = $"{guid}.jpg";
+
+                        path = Path.Combine(
+                               Directory.GetCurrentDirectory(),
+                               "wwwroot\\images\\products",
+                               file);
+
+                        //Gravar
+                        using (var stream = new FileStream(path, FileMode.Create))
+                        {   //Na pratica sera aqui que vai guardar
+                            await model.ImageFile.CopyToAsync(stream);
+                        }
+                        //Este será o caminho que vai ser guardado na base de dados
+                        path = $"~/images/products/{file}";
+                    }
+
+                    //Converter o ProductViewModel em Product
+                    var product = this.ToProduct(model, path);
+
                     //TODO: Modifiar para o user que estiver logado
                     product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
                     //faz o update do produto
@@ -131,7 +217,7 @@ namespace SuperShop.Controllers
                 catch (DbUpdateConcurrencyException)
                 {//Se acontecer alguma coisa mal vai verificar o ID pois como na web pode haver muitas pessoas a trabalhar em
                  //simultaneo e se por exemplo eu tiver a preencher mas alguem ja apagou o produto tendo esta validação a app nao rebenta
-                    if (! await _productRepository.ExistAsync(product.Id))
+                    if (! await _productRepository.ExistAsync(model.Id))
                     {
                         return NotFound();
                     }
@@ -143,8 +229,8 @@ namespace SuperShop.Controllers
                 //redireciona para o index
                 return RedirectToAction(nameof(Index));
             }
-            //Se alguma coisa correr mal retorna na mesma a View com o produto dentro
-            return View(product);
+            //Se alguma coisa correr mal retorna na mesma a View com o model dentro
+            return View(model);
         }
 
         // GET: Products/Delete/5

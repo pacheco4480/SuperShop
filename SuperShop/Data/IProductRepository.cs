@@ -1,4 +1,5 @@
 ﻿using SuperShop.Data.Entities;
+using System.Linq;
 
 namespace SuperShop.Data
 {
@@ -6,7 +7,7 @@ namespace SuperShop.Data
     // e será específica para a entidade Product
     public interface IProductRepository : IGenericRepository<Product>
     {
-        // Neste ponto, não há necessidade de adicionar métodos adicionais porque
-        // IProductRepository já herda todos os métodos de IGenericRepository para o tipo Product
+        public IQueryable GetAllWithUsers();
+
     }
 }

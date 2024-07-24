@@ -43,5 +43,18 @@ namespace SuperShop.Data.Entities
         //Esta propriedade mostra o User que inseriu o produto
         public User User { get; set; }
 
+        public string ImageFullPath
+        {
+            get
+            {   //Se estiver vazio retorna null
+                if (string.IsNullOrEmpty(ImageUrl))
+                {
+                    return null;
+                }
+                //Caso nao esteja vazio
+                return $"https://localhost:44369{ImageUrl.Substring(1)}";
+            }
+        }
+
     }
 }

@@ -92,7 +92,7 @@ namespace SuperShop
             app.UseStaticFiles();
 
             app.UseRouting();
-            //Chamar o serviço que criamos de autenticação
+            //Será necessário para o LOGIN
             app.UseAuthorization();
 
             app.UseAuthorization();

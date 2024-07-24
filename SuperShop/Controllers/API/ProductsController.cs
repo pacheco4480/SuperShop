@@ -22,7 +22,7 @@ namespace SuperShop.Controllers.API
         public IActionResult GetProducts()
         {
             //Vai buscar os produtos todos atraves do Repositorio _productRepository e o "Ok" mete tudo dentro do json
-            return Ok(_productRepository.GetAll());
+            return Ok(_productRepository.GetAllWithUsers());
         }
     }
 }
