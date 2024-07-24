@@ -65,6 +65,10 @@ namespace SuperShop
 
             services.AddScoped<IUserHelper, UserHelper>();
 
+            services.AddScoped<IImageHelper, ImageHelper>();
+
+            services.AddScoped<IConverterHelper, ConverterHelper>();
+
             // Assim que detectar que é preciso um repositório de produtos, ele vai automaticamente criar uma instância de ProductRepository
             // Usamos AddScoped porque este serviço pode ser criado várias vezes durante o tempo de vida de uma requisição HTTP
             // Exemplo: se um usuário clicar na aba de produtos na navbar, ele cria um objeto ProductRepository

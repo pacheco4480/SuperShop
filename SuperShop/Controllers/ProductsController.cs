@@ -17,14 +17,23 @@ namespace SuperShop.Controllers
     {
         private readonly IProductRepository _productRepository;
         private readonly IUserHelper _userHelper;
+        private readonly IImageHelper _imageHelper;
+        private readonly IConverterHelper _converterHelper;
 
         //Ctrl  + . em cima do productRepository e clicar em "Create and assign field productRepository"
         //Ctrl  + . em cima do userHelper e clicar em "Create and assign field userHelper"
+        //Ctrl  + . em cima do imageHelper e clicar em "Create and assign field imageHelper"
+        //Ctrl  + . em cima do converterHelper e clicar em "Create and assign field converterHelper"
 
-        public ProductsController(IProductRepository productRepository, IUserHelper userHelper)
+        public ProductsController(IProductRepository productRepository, 
+                                  IUserHelper userHelper, 
+                                  IImageHelper imageHelper, 
+                                  IConverterHelper converterHelper)
         {
             _productRepository = productRepository;
             _userHelper = userHelper;
+            _imageHelper = imageHelper;
+            _converterHelper = converterHelper;
         }
 
         // GET: Products
@@ -78,27 +87,14 @@ namespace SuperShop.Controllers
                 var path = string.Empty;
                 //Caso tenha uma imagem
                 if (model.ImageFile != null && model.ImageFile.Length > 0)
-                {   //Aqui gera uma chave aleatoria que no vai dar um objeto do tipo Guid e vamos converter em string
-                    //Isto faz com que seja gerado um nome 
-                    var guid = Guid.NewGuid().ToString();
-                    var file = $"{guid}.jpg";
-
-                    path = Path.Combine(
-                           Directory.GetCurrentDirectory(),
-                           "wwwroot\\images\\products",
-                           file);
-
-                    //Gravar
-                    using(var stream = new FileStream(path, FileMode.Create))
-                    {   //Na pratica sera aqui que vai guardar
-                        await model.ImageFile.CopyToAsync(stream);
-                    }
-                    //Este será o caminho que vai ser guardado na base de dados
-                    path = $"~/images/products/{file}";
+                {
+                    //Recebe o ficheiro, guarda na pata products e vai UploadImageAsync que está IImageHelper 
+                    path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
                 }
 
                 //Converter o ProductViewModel em Product
-                var product = this.ToProduct(model, path);
+                //Mandamos o model, path, e como o produto é novo mandamos true
+                var product = _converterHelper.ToProduct(model, path, true);
 
                 //TODO: Modifiar para o user que estiver logado
                 product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
@@ -112,22 +108,7 @@ namespace SuperShop.Controllers
             return View(model);
         }
 
-        //Conversão do ProductViewModel em Product
-        private Product ToProduct(ProductViewModel model, string path)
-        {
-            return new Product
-            {
-                Id = model.Id,
-                ImageUrl = path,
-                IsAvailable = model.IsAvailable,
-                LastPurchase = model.LastPurchase,
-                LastSale = model.LastSale,
-                Name = model.Name,
-                Price = model.Price,
-                Stock = model.Stock,
-                User = model.User
-            };
-        }
+
 
         // GET: Products/Edit/5
         //Aqui temos o "?" que serve para nao forçar a pessoa a por um ID e deixar passar em branco sendo opcional
@@ -147,26 +128,13 @@ namespace SuperShop.Controllers
                 return NotFound();
             }
 
-            var model = this.ToProductViewModel(product);
+
+            var model = _converterHelper.ToProductViewModel(product);
 
             //se encontrar o produto retorna view e manda o model
             return View(model);
         }
 
-        private ProductViewModel ToProductViewModel(Product product)
-        {
-            return new ProductViewModel { 
-                Id = product.Id, 
-                ImageUrl = product.ImageUrl, 
-                IsAvailable = product.IsAvailable, 
-                LastPurchase = product.LastPurchase, 
-                LastSale = product.LastSale,
-                Name = product.Name,
-                Price = product.Price,
-                Stock = product.Stock,
-                User = product.User
-            };      
-        }
 
         // POST: Products/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -186,27 +154,12 @@ namespace SuperShop.Controllers
                     //Caso tenha uma imagem
                     if (model.ImageFile != null && model.ImageFile.Length > 0)
                     {
-                        //Aqui gera uma chave aleatoria que no vai dar um objeto do tipo Guid e vamos converter em string
-                        //Isto faz com que seja gerado um nome 
-                        var guid = Guid.NewGuid().ToString();
-                        var file = $"{guid}.jpg";
-
-                        path = Path.Combine(
-                               Directory.GetCurrentDirectory(),
-                               "wwwroot\\images\\products",
-                               file);
-
-                        //Gravar
-                        using (var stream = new FileStream(path, FileMode.Create))
-                        {   //Na pratica sera aqui que vai guardar
-                            await model.ImageFile.CopyToAsync(stream);
-                        }
-                        //Este será o caminho que vai ser guardado na base de dados
-                        path = $"~/images/products/{file}";
+                        //Recebe o ficheiro, guarda na pata products e vai UploadImageAsync que está IImageHelper 
+                        path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
                     }
 
-                    //Converter o ProductViewModel em Product
-                    var product = this.ToProduct(model, path);
+                    //Mandamos o model, path, e como o produto é nao é novo mandamos false
+                    var product = _converterHelper.ToProduct(model, path, false);
 
                     //TODO: Modifiar para o user que estiver logado
                     product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
