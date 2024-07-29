@@ -17,7 +17,10 @@ namespace SuperShop.Controllers
     {
         private readonly IProductRepository _productRepository;
         private readonly IUserHelper _userHelper;
-        private readonly IImageHelper _imageHelper;
+        //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
+        //private readonly IImageHelper _imageHelper;
+        //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+        private readonly IBlobHelper _blobHelper;
         private readonly IConverterHelper _converterHelper;
 
         //Ctrl  + . em cima do productRepository e clicar em "Create and assign field productRepository"
@@ -25,14 +28,20 @@ namespace SuperShop.Controllers
         //Ctrl  + . em cima do imageHelper e clicar em "Create and assign field imageHelper"
         //Ctrl  + . em cima do converterHelper e clicar em "Create and assign field converterHelper"
 
-        public ProductsController(IProductRepository productRepository, 
-                                  IUserHelper userHelper, 
-                                  IImageHelper imageHelper, 
+        public ProductsController(IProductRepository productRepository,
+                                  IUserHelper userHelper,
+                                  //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
+                                  //IImageHelper imageHelper,
+                                  //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                                  IBlobHelper blobHelper,
                                   IConverterHelper converterHelper)
         {
             _productRepository = productRepository;
             _userHelper = userHelper;
-            _imageHelper = imageHelper;
+            //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
+            //_imageHelper = imageHelper;
+            //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+            _blobHelper = blobHelper;
             _converterHelper = converterHelper;
         }
 
@@ -82,19 +91,27 @@ namespace SuperShop.Controllers
         public async Task<IActionResult> Create(ProductViewModel model)
         {   //Aqui vê se o produto é valido cumprindo as regras que demos no ficheiro Product.cs
             if (ModelState.IsValid)
-            {
+            {   //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
                 //Carregar as Imagens
-                var path = string.Empty;
+                //var path = string.Empty;
+                //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                Guid imageId = Guid.Empty;
+
                 //Caso tenha uma imagem
                 if (model.ImageFile != null && model.ImageFile.Length > 0)
-                {
+                {   //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
                     //Recebe o ficheiro, guarda na pata products e vai UploadImageAsync que está IImageHelper 
-                    path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
-                }
+                    //path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
+                    //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                    imageId = await _blobHelper.UploadBlobAsync(model.ImageFile, "products");
 
+                }
+                //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
                 //Converter o ProductViewModel em Product
                 //Mandamos o model, path, e como o produto é novo mandamos true
-                var product = _converterHelper.ToProduct(model, path, true);
+                //var product = _converterHelper.ToProduct(model, path, true);
+                //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                var product = _converterHelper.ToProduct(model, imageId, true);
 
                 //TODO: Modifiar para o user que estiver logado
                 product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
@@ -143,23 +160,29 @@ namespace SuperShop.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProductViewModel model)
-        {   
+        {
             //caso esteja tudo ok vemos se o Modelo é valido
             if (ModelState.IsValid)
             {
                 try
-                {
-                    var path = model.ImageUrl;
+                {   //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
+                    //var path = model.ImageUrl;
+                    //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                    Guid imageId = model.ImageId;
 
                     //Caso tenha uma imagem
                     if (model.ImageFile != null && model.ImageFile.Length > 0)
-                    {
+                    {   //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
                         //Recebe o ficheiro, guarda na pata products e vai UploadImageAsync que está IImageHelper 
-                        path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
+                        //path = await _imageHelper.UploadImageAsync(model.ImageFile, "products");
+                        //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                        imageId = await _blobHelper.UploadBlobAsync(model.ImageFile, "products");
                     }
-
+                    //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
                     //Mandamos o model, path, e como o produto é nao é novo mandamos false
-                    var product = _converterHelper.ToProduct(model, path, false);
+                    //var product = _converterHelper.ToProduct(model, path, false);
+                    //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+                    var product = _converterHelper.ToProduct(model, imageId, false);
 
                     //TODO: Modifiar para o user que estiver logado
                     product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
@@ -170,7 +193,7 @@ namespace SuperShop.Controllers
                 catch (DbUpdateConcurrencyException)
                 {//Se acontecer alguma coisa mal vai verificar o ID pois como na web pode haver muitas pessoas a trabalhar em
                  //simultaneo e se por exemplo eu tiver a preencher mas alguem ja apagou o produto tendo esta validação a app nao rebenta
-                    if (! await _productRepository.ExistAsync(model.Id))
+                    if (!await _productRepository.ExistAsync(model.Id))
                     {
                         return NotFound();
                     }

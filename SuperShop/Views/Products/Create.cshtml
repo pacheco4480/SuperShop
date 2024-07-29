@@ -28,7 +28,7 @@ aceitar ficheiros neste caso ImageFile temos que utilizar o ProductViewModel que
             <div class="form-group">
                 <!--Substituir o ImageUrl por ImageFile-->
                 <label asp-for="ImageFile" class="control-label"></label>
-                <input asp-for="ImageFile" class="form-control" type="file"/>
+                <input asp-for="ImageFile" class="form-control" type="file" />
                 <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -65,5 +65,7 @@ aceitar ficheiros neste caso ImageFile temos que utilizar o ProductViewModel que
 <!--Aqui é criada uma vista parcial "RenderPartialAsync" e vai chama-la "_ValidationScriptsPartial" -->
 <!--"_ValidationScriptsPartial" está na pasta views Shared-->
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

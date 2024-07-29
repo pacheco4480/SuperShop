@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Logging;
 using SuperShop.Data;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
@@ -51,7 +52,7 @@ namespace SuperShop
                 cfg.Password.RequiredLength = 6;
             })
                 .AddEntityFrameworkStores<DataContext>();
-            
+
 
             //Cria um serviço que utilize o nosso DataContext que vai usar o SQL Server com a connection string
             services.AddDbContext<DataContext>(cfg =>
@@ -64,8 +65,10 @@ namespace SuperShop
             services.AddTransient<SeedDb>();
 
             services.AddScoped<IUserHelper, UserHelper>();
-
-            services.AddScoped<IImageHelper, ImageHelper>();
+            //SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD
+            //services.AddScoped<IImageHelper, ImageHelper>();
+            //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
+            services.AddScoped<IBlobHelper, BlobHelper>();
 
             services.AddScoped<IConverterHelper, ConverterHelper>();
 

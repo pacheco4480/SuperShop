@@ -35,38 +35,46 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @if(!string.IsNullOrEmpty(item.ImageUrl))
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    <!--SUBSTITUIÇAO IMAGEURL por IMAGEID - OLD-->
+                    @*                 @if(!string.IsNullOrEmpty(item.ImageUrl))
                 {   <!--Carrega a imagem-->
-                    <img src="@Url.Content(item.ImageUrl)" alt="Image" style="width:100px; height=150px; max-width:100%; height:auto"/>        
-                }
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastPurchase)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastSale)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsAvailable)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Stock)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a> 
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a> 
+                <img src="@Url.Content(item.ImageUrl)" alt="Image" style="width:100px; height=150px; max-width:100%; height:auto"/>
+                } *@
+                    <!--SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW-->
+                    @if (!string.IsNullOrEmpty(item.ImageFullPath))
+                    {
+                        <!--Carrega a imagem-->
+                        <img src="@Url.Content(item.ImageFullPath)" alt="Image" style="width:100px; height=150px; max-width:100%; height:auto" />
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastPurchase)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastSale)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IsAvailable)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Stock)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
-            </td>
-        </tr>
-}
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
