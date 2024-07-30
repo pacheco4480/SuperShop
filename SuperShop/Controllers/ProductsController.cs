@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using SuperShop.Models;
 
 namespace SuperShop.Controllers
 {
+
     public class ProductsController : Controller
     {
         private readonly IProductRepository _productRepository;
@@ -73,9 +75,12 @@ namespace SuperShop.Controllers
             return View(product);
         }
 
+
         // GET: Products/Create
         //A unica coisa que esta View faz é abrir a View do create
         //Precisamos sempre das duas GET e POST uma mostra e outra recebe os valores
+        //Tendo este [Authorize] só os utilizadores logados vao conseguir criar produtos
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -131,6 +136,8 @@ namespace SuperShop.Controllers
         //Aqui temos o "?" que serve para nao forçar a pessoa a por um ID e deixar passar em branco sendo opcional
         //sendo assim nao é preciso ter um ID exemplo: podendo ficar assim "https://localhost:44369/Products/edit" na vez de 
         //"https://localhost:44369/Products/edit/1"
+        //Tendo este [Authorize] só os utilizadores logados vao conseguir editar produtos
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {   //Se o Id for nulo retornaNotFound
             if (id == null)

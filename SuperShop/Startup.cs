@@ -99,8 +99,8 @@ namespace SuperShop
             app.UseStaticFiles();
 
             app.UseRouting();
-            //Será necessário para o LOGIN
-            app.UseAuthorization();
+            //Será necessário para fazer o LOGIN
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
