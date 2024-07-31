@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using SuperShop.Models;
 using System.Linq;
@@ -67,5 +70,66 @@ namespace SuperShop.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+
+        //Este action é só para mostrar a página do Register
+        //Depois de elaborado este metodo temos que criar a respectiva View para o Register para isso
+        //clicamos com o botao direito sobre Register() e fazemos Add View - Razor View - Add
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+
+        //Este action é para fazer o Register
+        [HttpPost]
+        //Recebe um RegisterNewUserViewModel
+        public async Task<IActionResult> Register(RegisterNewUserViewModel model)
+        {   //Se o modelo é válido
+            if (ModelState.IsValid)
+            {   //Ver se o user ja existe
+                var user = await _userHelper.GetUserByEmailAsync(model.Username);
+                //Se o user nao existe
+                if (user == null)
+                {   //Cria um user novo
+                    user = new User
+                    {
+                        FirstName = model.FirstName,
+                        LastName = model.LastName,
+                        Email = model.Username,
+                        UserName = model.Username
+                    };
+
+                    //Adiciona o novo User
+                    var result = await _userHelper.AddUserAsync(user, model.Password);
+                    //Se nao conseguiu criar o User
+                    if (result != IdentityResult.Success)
+                    {//Vai aparecer uma mensagem de erro
+                        ModelState.AddModelError(string.Empty, "The User couldn't be created");
+                        //Aqui passamos o model para os campos nao ficarem em branco e o utilizador poder corrigir
+                        //aquilo que entender sem ter que preencher tudo novamente
+                        return View(model);
+                    }
+
+                    //Se consegui criar o User é construido o LoginViewModel
+                    var loginViewModel = new LoginViewModel
+                    {
+                        Password = model.Password,
+                        RememberMe = false,
+                        Username = model.Username
+                    };
+
+                    //Aqui está o Sigin, aqui vai tentar logar a partir do loginViewModel
+                    var result2 = await _userHelper.LoginAsync(loginViewModel);
+                    //Se consegue logar
+                    if (result2.Succeeded)
+                    {
+                        return RedirectToAction("Index", "Home");
+                    }
+                    //Se nao se consegue Logar
+                    ModelState.AddModelError(string.Empty, "The User couldn't be logged");
+                }                
+            }
+            return View(model);
+        }
     }
 }

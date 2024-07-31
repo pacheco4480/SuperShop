@@ -118,8 +118,8 @@ namespace SuperShop.Controllers
                 //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
                 var product = _converterHelper.ToProduct(model, imageId, true);
 
-                //TODO: Modifiar para o user que estiver logado
-                product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
+                //O user que estiver logado vai ficar associado ao produto
+                product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
                 //Se o produto for válido adicionamos o produto em memoria (nao grava na base de dados fica pendente)
                 await _productRepository.CreateAsync(product);
                 //No final de gravar redireciona para accion Index
@@ -191,8 +191,8 @@ namespace SuperShop.Controllers
                     //SUBSTITUIÇAO IMAGEURL por IMAGEID - NEW
                     var product = _converterHelper.ToProduct(model, imageId, false);
 
-                    //TODO: Modifiar para o user que estiver logado
-                    product.User = await _userHelper.GetUserByEmailAsync("david@gmail.com");
+                    //O user que estiver logado vai ficar associado ao produto
+                    product.User = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
                     //faz o update do produto
                     await _productRepository.UpdateAsync(product);
                 }
@@ -217,6 +217,8 @@ namespace SuperShop.Controllers
         }
 
         // GET: Products/Delete/5
+        //Tendo este [Authorize] só os utilizadores logados vao conseguir eliminar produtos
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {   //Se o Id nao existe retorna NotFound
             if (id == null)
