@@ -22,5 +22,12 @@ namespace SuperShop.Helpers
 
         //Método para mudar a password
         Task<IdentityResult> ChangePasswordAsync(User user, string oldPassword, string newPassword);
+
+        //Roles - Verifica se tem determinado Role se nao tem cria
+        Task CheckRoleAsync(string roleName);
+        //Roles - Adiciona o Role a um determinado User
+        Task AddUserToRoleAsync(User user, string roleName);
+        //Roles - Vê se o User ja tem Role ou nao
+        Task<bool> IsUserInRoleAsync(User user, string roleName);
     }
 }

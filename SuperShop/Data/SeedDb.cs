@@ -34,6 +34,11 @@ namespace SuperShop.Data
         {   //Vai ver se a base de dados está criada, se ela nao tiver criada, cria, se ja tiver criada, nao faz nada
             await _context.Database.EnsureCreatedAsync();
 
+            //Roles - Metodo para ver se o Role Admin existe, se nao existir cria
+            await _userHelper.CheckRoleAsync("Admin");
+            //Roles - Metodo para ver se o Role Customer existe, se nao existir cria
+            await _userHelper.CheckRoleAsync("Customer");
+
 
             //Primeiro ver se ja existe o utillizador ou nao (este utilizador vai ser o admin)
             var user = await _userHelper.GetUserByEmailAsync("david@gmail.com");
@@ -59,7 +64,20 @@ namespace SuperShop.Data
                 { //Se nao conseguiu criar o User é apresentada a seguinte mensagem
                     throw new InvalidOperationException("Could not create the user in seeder");
                 }
+
+                //Roles - Adicionar o Role que ja existe ao User
+                await _userHelper.AddUserToRoleAsync(user, "Admin");
             }
+
+            //Roles - Este Role verifica se o User tem o Role que queremos chekar
+            var isInRole = await _userHelper.IsUserInRoleAsync(user, "Admin");
+            //Roles - Se o User que foi criado nao tem o Admin
+            if (!isInRole)
+            {
+                await _userHelper.AddUserToRoleAsync(user, "Admin");
+            }
+
+
 
             //Depois de ter a base de dados feita cria os produtos para dentro da tabela
             //Se nao existirem produtos

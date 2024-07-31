@@ -80,7 +80,8 @@ namespace SuperShop.Controllers
         //A unica coisa que esta View faz é abrir a View do create
         //Precisamos sempre das duas GET e POST uma mostra e outra recebe os valores
         //Tendo este [Authorize] só os utilizadores logados vao conseguir criar produtos
-        [Authorize]
+        //Roles - Só os admin's logados vao conseguir criar produtos
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
