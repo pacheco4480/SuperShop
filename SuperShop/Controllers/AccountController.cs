@@ -6,6 +6,7 @@ using SuperShop.Helpers;
 using SuperShop.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SuperShop.Controllers
 {
@@ -131,5 +132,96 @@ namespace SuperShop.Controllers
             }
             return View(model);
         }
+
+        //Este action é só para mostrar a página do ChangeUser
+        //Depois de elaborado este metodo temos que criar a respectiva View para o ChangeUser para isso
+        //clicamos com o botao direito sobre ChangeUser() e fazemos Add View - Razor View - Add
+        public async Task<IActionResult> ChangeUser()
+        {   //ver se o User existe
+            var user = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
+            //Construir o modelo
+            var model = new ChangeUserViewModel();
+            //Se o suer existir passar os dados existentes sobre esse user
+            if (user != null)
+            {
+                model.FirstName = user.FirstName;
+                model.LastName = user.LastName;
+            }
+
+            return View(model);
+        }
+
+
+
+        //Este action é para fazer o ChangeUser
+        [HttpPost]
+        //Recebe um ChangeUserViewModel
+        public async Task<IActionResult> ChangeUser(ChangeUserViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                //ver se o User existe
+                var user = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
+                //Se o suer existir passar os dados existentes sobre esse user
+                if (user != null)
+                {
+                    user.FirstName = model.FirstName;
+                    user.LastName = model.LastName;
+                    //Update mudando o FirstName e LastName
+                    var response = await _userHelper.UpdateUserAsync(user);
+                    if (response.Succeeded)
+                    {
+                        ViewBag.UserMessage = "User updated!";
+                    }
+                    //Se nao conseguir fazer o update manda uma mensagem de erro
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, response.Errors.FirstOrDefault().Description);
+                    }
+                }
+            }
+            return View(model);
+        }
+
+        //Este action é só para mostrar a página do ChangePassword
+        //Depois de elaborado este metodo temos que criar a respectiva View para o ChangePassword para isso
+        //clicamos com o botao direito sobre ChangePassword() e fazemos Add View - Razor View - Add
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        //Este action é para fazer o ChangePassword
+        [HttpPost]
+        //Recebe um ChangePasswordViewModel
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {   //Se o modelo for válido
+            if (ModelState.IsValid)
+            {   //Verifica se o User existe e traz os dados
+                var user = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
+                //Se o User existe
+                if (user != null)
+                {   //Modifica a Password
+                    var result = await _userHelper.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                    if (result.Succeeded)
+                    {   //Redireciona para o ChangeUser
+                        return this.RedirectToAction("ChangeUser");
+                    }
+                    //Se algo nao acontecer bem é mandado uma mensagem de erro
+                    else
+                    {
+                        this.ModelState.AddModelError(string.Empty, result.Errors.FirstOrDefault().Description);
+                    }
+                }
+                //Se nao encontrar o User manda esta mensagem e depois retorna para o View(model)
+                else
+                {
+                    this.ModelState.AddModelError(string.Empty, "User not found.");
+                }
+            }
+
+            return this.View(model);
+        }
+
     }
 }

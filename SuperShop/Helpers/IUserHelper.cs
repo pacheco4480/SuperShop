@@ -16,5 +16,11 @@ namespace SuperShop.Helpers
 
         //O metodo LogoutAsync nao tem parametro nenhum (sai)
         Task LogoutAsync();
+
+        //Metodo para fazer Update do utilizador
+        Task<IdentityResult> UpdateUserAsync(User user);
+
+        //Método para mudar a password
+        Task<IdentityResult> ChangePasswordAsync(User user, string oldPassword, string newPassword);
     }
 }
