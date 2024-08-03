@@ -60,7 +60,7 @@ namespace SuperShop.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             //Aqui pomos o .Value no id para quando o valor for nulo a aplicaçao nao crashar
@@ -69,7 +69,7 @@ namespace SuperShop.Controllers
             var product = await _productRepository.GetByIdAsync(id.Value);
             if (product == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
             return View(product);
@@ -143,14 +143,14 @@ namespace SuperShop.Controllers
         {   //Se o Id for nulo retornaNotFound
             if (id == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
             //Se o ID nao for nulo vai ver á tabela se o ID existe
             var product = await _productRepository.GetByIdAsync(id.Value);
             //Aqui volta de novo a verificar o ID 
             if (product == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
 
 
@@ -224,14 +224,14 @@ namespace SuperShop.Controllers
         {   //Se o Id nao existe retorna NotFound
             if (id == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
             //SE o ID existe vai buscar à tabela
             var product = await _productRepository.GetByIdAsync(id.Value);
             //Se nao econtra o Produto NotFOund
             if (product == null)
             {
-                return NotFound();
+                return new NotFoundViewResult("ProductNotFound");
             }
             //Se não retorna a view com o produto dentro
             return View(product);
@@ -248,6 +248,14 @@ namespace SuperShop.Controllers
             await _productRepository.DeleteAsync(product);
             //Depois quando apagar redireciona para a view Index
             return RedirectToAction(nameof(Index));
+        }
+
+        //Este action é só para mostrar a página do ProductNotFound
+        //Depois de elaborado este metodo temos que criar a respectiva View para o ProductNotFound para isso
+        //clicamos com o botao direito sobre ProductNotFound() e fazemos Add View - Razor View - Add
+        public IActionResult ProductNotFound ()
+        {
+            return View();
         }
     }
 }

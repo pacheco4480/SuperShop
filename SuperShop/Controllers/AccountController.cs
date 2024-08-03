@@ -223,5 +223,12 @@ namespace SuperShop.Controllers
             return this.View(model);
         }
 
+        //Este action é só para mostrar a página do NotAuthorized
+        //Depois de elaborado este metodo temos que criar a respectiva View para o NotAuthorized para isso
+        //clicamos com o botao direito sobre NotAuthorized() e fazemos Add View - Razor View - Add
+        public IActionResult NotAuthorized()
+        {
+            return View();
+        }
     }
 }

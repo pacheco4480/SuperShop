@@ -79,6 +79,16 @@ namespace SuperShop
             services.AddScoped<IProductRepository, ProductRepository>();
 
 
+            //O NotAuthorized passa a usar a action que criamos no AccountController na vez de usar a action predefenida
+            services.ConfigureApplicationCookie(options =>
+            {   //Aqui é anulado o retorno que tinhamos criado no ficheiro AccountController
+                //em public async Task<IActionResult> Login (LoginViewModel model) 
+                options.LoginPath = "/Account/NotAuthorized";
+                //Quando houver um acesso negado executa este controlador com esta action
+                options.AccessDeniedPath = "/Account/NotAuthorized";
+            });
+
+
             services.AddControllersWithViews();
         }
 
@@ -95,6 +105,10 @@ namespace SuperShop
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            //Quando nao encontrar a página vai à procura de um error
+            app.UseStatusCodePagesWithReExecute("/error/{0}");
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
