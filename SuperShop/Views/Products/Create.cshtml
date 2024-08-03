@@ -20,8 +20,12 @@ aceitar ficheiros neste caso ImageFile temos que utilizar o ProductViewModel que
             <partial name="_Products"/>  
             
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-success">Back to List</a>
+@*                 Font-awesome - quemos por icons no botoes mas como nao é possivel por icones num input
+                    temos entao que substituir o input de baixo por um button
+                <input type="submit" value="Create" class="btn btn-primary" /> *@
+                <!--Sempre que usamos o Font-awesome temos que usar a tag <i>-->
+                <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Create</button>
+                <a asp-action="Index" class="btn btn-success"><i class="fa fa-chevron-left"></i> Back to List</a>
             </div>
         </form>
     </div>
