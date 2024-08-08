@@ -17,6 +17,19 @@ namespace SuperShop.Data
         //criada através do DataContext
         public DbSet<Product> Products { get; set; }
 
+        // Propriedade que representa a tabela de pedidos no banco de dados.
+        // DbSet é responsável por criar e gerenciar a tabela Orders.
+        public DbSet<Order> Orders { get; set; }
+
+        // Propriedade que representa a tabela de detalhes do pedido no banco de dados.
+        // DbSet é responsável por criar e gerenciar a tabela OrderDetails.
+        public DbSet<OrderDetail> OrderDetails { get; set; }
+
+        // Propriedade que representa uma tabela temporária de detalhes do pedido no banco de dados.
+        // DbSet é responsável por criar e gerenciar a tabela OrderDetailsTemp.
+        public DbSet<OrderDetailTemp> OrderDetailsTemp { get; set; }
+
+
         //Cntrl + . sobre "DbContextOptions" para injetarmos o DataContext da Entitie Framework Core
         //na nossa para ele conseguir reconhecer o "DbContextOptions"
         //Este DbContextOptions é o DataContext da Entitie Framework Core e para usarmos a nossa
