@@ -34,6 +34,22 @@ namespace SuperShop.Data
             _userHelper = userHelper;
         }
 
+        public async Task<IQueryable<OrderDetailTemp>> GetDetailTempsAsync(string userName)
+        {
+            // Obtém o utilizador com base no email
+            var user = await _userHelper.GetUserByEmailAsync(userName);
+            // Se o utilizador não existir, retorna uma lista vazia
+            if (user == null)
+            {
+                return null;
+            }
+            //Se o utilizador existir vai buscar os temporarios
+            return _context.OrderDetailsTemp
+                .Include(p => p.Product)
+                .Where(o => o.User == user)
+                .OrderBy(o => o.Product.Name);
+        }
+
         //Isto será apenas para ir buscar as encomendas
         public async Task<IQueryable<Order>> GetOrderAsync(string userName)
         {   // Obtém o utilizador com base no email

@@ -9,5 +9,8 @@ namespace SuperShop.Data
         //Na pratica isto será uma tarefa que devolve uma tabela de Orders para podermos ir buscar todas as encomendas
         //Este metodo dará todas as encomendas de um determinado User
         Task<IQueryable<Order>> GetOrderAsync(string userName);
+
+        //Rece um User é dá nos o temporário
+        Task<IQueryable<OrderDetailTemp>> GetDetailTempsAsync(string userName);
     }
 }

@@ -1,4 +1,8 @@
-﻿using SuperShop.Data.Entities;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json.Linq;
+using SuperShop.Data.Entities;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SuperShop.Data
@@ -9,5 +13,8 @@ namespace SuperShop.Data
     {
         public IQueryable GetAllWithUsers();
 
+
+        //Método para gerar uma lista de produtos
+        IEnumerable<SelectListItem> GetComboProducts();
     }
 }
