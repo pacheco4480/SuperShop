@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
+using SuperShop.Models;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,6 +34,64 @@ namespace SuperShop.Data
             _context = context;
             _userHelper = userHelper;
         }
+
+        // Recebe um modelo de item e o nome de utilizador para adicionar o item ao pedido temporário
+        public async Task AddItemToOrderAsync(AddItemViewModel model, string userName)
+        {
+            // Obtém o utilizador com base no email fornecido
+            var user = await _userHelper.GetUserByEmailAsync(userName);
+
+            // Verifica se o utilizador existe
+            if (user == null)
+            {
+                // Se o utilizador não existir, sai do método sem fazer alterações
+                return;
+            }
+
+            // Procura o produto na base de dados pelo ID fornecido no modelo
+            var product = await _context.Products.FindAsync(model.ProductId);
+
+            // Verifica se o produto existe
+            if (product == null)
+            {
+                // Se o produto não existir, sai do método sem fazer alterações
+                return;
+            }
+
+            // Verifica se já existe um registo de OrderDetailTemp para o utilizador e produto específicos
+            var orderDetailTemp = await _context.OrderDetailsTemp
+                .Where(odt => odt.User == user && odt.Product == product)
+                .FirstOrDefaultAsync();
+
+            // Se não existir um registo de OrderDetailTemp, cria um novo
+            if (orderDetailTemp == null)
+            {
+                // Cria um novo OrderDetailTemp com os dados do produto e do utilizador
+                orderDetailTemp = new OrderDetailTemp
+                {
+                    Price = product.Price, // Define o preço do produto
+                    Product = product, // Associa o produto ao OrderDetailTemp
+                    Quantity = model.Quantity, // Define a quantidade com base no modelo fornecido
+                    User = user, // Associa o utilizador ao OrderDetailTemp
+                };
+
+                // Adiciona o novo OrderDetailTemp ao contexto da base de dados
+                _context.OrderDetailsTemp.Add(orderDetailTemp);
+            }
+            // Se já existir um registo de OrderDetailTemp, atualiza a quantidade
+            else
+            {
+                // Incrementa a quantidade do item existente com a quantidade do modelo
+                orderDetailTemp.Quantity += model.Quantity;
+
+                // Atualiza o registo existente no contexto da base de dados
+                _context.OrderDetailsTemp.Update(orderDetailTemp);
+            }
+
+            // Guarda as alterações na base de dados de forma assíncrona
+            await _context.SaveChangesAsync();
+        }
+
 
         public async Task<IQueryable<OrderDetailTemp>> GetDetailTempsAsync(string userName)
         {
@@ -82,5 +141,34 @@ namespace SuperShop.Data
                 .Where(o => o.User == user)
                 .OrderByDescending(o => o.OrderDate);
         }
+
+        // Método para modificar a quantidade de um item temporário no pedido
+        public async Task ModifyOrderDetailTempQuantityAsync(int id, double quantity)
+        {
+            // Procura o detalhe da encomenda temporário pelo ID
+            var orderDetailTemp = await _context.OrderDetailsTemp.FindAsync(id);
+
+            // Verifica se não existe nenhum detalhe de encomenda temporário com o ID fornecido
+            if (orderDetailTemp == null)
+            {
+                // Sai do método se o detalhe de encomenda temporário não for encontrado
+                return;
+            }
+
+            // Se o detalhe de encomenda temporário existe, altera a quantidade
+            orderDetailTemp.Quantity += quantity;
+
+            // Verifica se a nova quantidade é maior que zero
+            if (orderDetailTemp.Quantity > 0)
+            {
+                // Atualiza o detalhe de encomenda temporário no contexto da base de dados
+                _context.OrderDetailsTemp.Update(orderDetailTemp);
+
+                // Guarda as alterações na base de dados de forma assíncrona
+                await _context.SaveChangesAsync();
+            }
+            // Se a quantidade for menor ou igual a zero, não faz atualizações nem remove
+        }
+
     }
 }

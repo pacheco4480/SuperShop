@@ -58,5 +58,24 @@ namespace SuperShop.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        // Método para adicionar um produto a um pedido temporário
+        public async Task<IActionResult> AddProduct(AddItemViewModel model)
+        {
+            // Verifica se o modelo passado para o método é válido
+            if (ModelState.IsValid)
+            {
+                // Chama o repositório de encomendas para adicionar o item ao pedido do utilizador atual
+                await _orderRepository.AddItemToOrderAsync(model, this.User.Identity.Name);
+
+                // Redireciona o utilizador para a ação "Create" após adicionar o item
+                return RedirectToAction("Create");
+            }
+
+            // Se o modelo não for válido, retorna a mesma vista com o modelo fornecido para correção
+            return View(model);
+        }
+
+
     }
 }
