@@ -25,5 +25,9 @@ namespace SuperShop.Data
         // Método assíncrono que modifica a quantidade de um item de pedido temporário.
         // Aceita o ID do item e a nova quantidade, permitindo atualizações de quantidade no carrinho de compras.
         Task ModifyOrderDetailTempQuantityAsync(int id, double quantity);
+
+        // Método assíncrono que elimina um detalhe temporário de encomenda com base no ID fornecido.
+        // Isto é útil para remover um item do carrinho de compras, por exemplo, quando um item é removido pelo utilizador.
+        Task DeleteDetailTempAsync(int id);
     }
 }

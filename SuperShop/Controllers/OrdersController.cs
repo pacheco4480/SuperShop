@@ -76,6 +76,58 @@ namespace SuperShop.Controllers
             return View(model);
         }
 
+        // Método assíncrono para eliminar um item de um pedido temporário com base no ID fornecido
+        public async Task<IActionResult> DeleteItem(int? id)
+        {
+            // Verifica se o ID fornecido é nulo
+            if (id == null)
+            {
+                // Se o ID for nulo, retorna um resultado "Não Encontrado" (404)
+                return NotFound();
+            }
+
+            // Chama o repositório para eliminar o detalhe temporário de encomenda com o ID fornecido
+            await _orderRepository.DeleteDetailTempAsync(id.Value);
+
+            // Redireciona o utilizador para a ação "Create" após a remoção do item
+            return RedirectToAction("Create");
+        }
+
+        // Método assíncrono para aumentar a quantidade de um item de um pedido temporário com base no ID fornecido
+        public async Task<IActionResult> Increase(int? id)
+        {
+            // Verifica se o ID fornecido é nulo
+            if (id == null)
+            {
+                // Se o ID for nulo, retorna um resultado "Não Encontrado" (404)
+                return NotFound();
+            }
+
+            // Chama o repositório para aumentar a quantidade do detalhe temporário de encomenda com o ID fornecido
+            // O aumento é de 1 unidade
+            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, 1);
+
+            // Redireciona o utilizador para a ação "Create" após o aumento da quantidade
+            return RedirectToAction("Create");
+        }
+
+        // Método assíncrono para diminuir a quantidade de um item de um pedido temporário com base no ID fornecido
+        public async Task<IActionResult> Decrease(int? id)
+        {
+            // Verifica se o ID fornecido é nulo
+            if (id == null)
+            {
+                // Se o ID for nulo, retorna um resultado "Não Encontrado" (404)
+                return NotFound();
+            }
+
+            // Chama o repositório para diminuir a quantidade do detalhe temporário de encomenda com o ID fornecido
+            // O decremento é de 1 unidade
+            await _orderRepository.ModifyOrderDetailTempQuantityAsync(id.Value, -1);
+
+            // Redireciona o utilizador para a ação "Create" após a diminuição da quantidade
+            return RedirectToAction("Create");
+        }
 
     }
 }

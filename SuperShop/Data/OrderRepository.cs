@@ -92,6 +92,26 @@ namespace SuperShop.Data
             await _context.SaveChangesAsync();
         }
 
+        // Método assíncrono para eliminar um detalhe temporário de encomenda com base no ID fornecido
+        public async Task DeleteDetailTempAsync(int id)
+        {
+            // Procura o detalhe da encomenda temporário pelo ID
+            var orderDetailTemp = await _context.OrderDetailsTemp.FindAsync(id);
+
+            // Verifica se o detalhe da encomenda temporário não existe
+            if (orderDetailTemp == null)
+            {
+                // Se o detalhe não for encontrado, sai do método sem fazer alterações
+                return;
+            }
+
+            // Remove o detalhe da encomenda temporário do contexto
+            _context.OrderDetailsTemp.Remove(orderDetailTemp);
+
+            // Guarda as alterações na base de dados de forma assíncrona
+            await _context.SaveChangesAsync();
+        }
+
 
         public async Task<IQueryable<OrderDetailTemp>> GetDetailTempsAsync(string userName)
         {
