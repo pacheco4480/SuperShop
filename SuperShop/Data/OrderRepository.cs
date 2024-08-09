@@ -2,6 +2,7 @@
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using SuperShop.Models;
+using System;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -92,6 +93,61 @@ namespace SuperShop.Data
             await _context.SaveChangesAsync();
         }
 
+        // Método assíncrono para confirmar uma encomenda para um utilizador específico
+        // Retorna um valor booleano que indica se a confirmação da encomenda foi bem-sucedida ou não
+        public async Task<bool> ConfirmOrderAsync(string userName)
+        {
+            // Obtém o utilizador com base no email fornecido
+            var user = await _userHelper.GetUserByEmailAsync(userName);
+
+            // Se o utilizador não existir, retorna false indicando que a confirmação não foi bem-sucedida
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Obtém todos os detalhes temporários da encomenda associados ao utilizador
+            var orderTmps = await _context.OrderDetailsTemp
+                .Include(o => o.Product) // Inclui os produtos relacionados com os detalhes temporários
+                .Where(o => o.User == user) // Filtra os detalhes temporários com base no utilizador
+                .ToListAsync(); // Converte o resultado para uma lista
+
+            // Se não houver detalhes temporários ou a lista for nula, retorna false
+            if (orderTmps == null || orderTmps.Count == 0)
+            {
+                return false;
+            }
+
+            // Converte os detalhes temporários para objetos OrderDetail
+            var details = orderTmps.Select(o => new OrderDetail
+            {
+                Price = o.Price,
+                Product = o.Product,
+                Quantity = o.Quantity
+            }).ToList();
+
+            // Cria uma nova encomenda com base nos detalhes
+            var order = new Order
+            {
+                OrderDate = DateTime.UtcNow, // Define a data do pedido como a data atual
+                User = user, // Define o utilizador associado à encomenda
+                Items = details // Define os detalhes da encomenda
+            };
+
+            // Adiciona a nova encomenda ao contexto
+            await CreateAsync(order);
+
+            // Remove os detalhes temporários da base de dados
+            _context.OrderDetailsTemp.RemoveRange(orderTmps);
+
+            // Guarda as alterações no contexto de forma assíncrona
+            await _context.SaveChangesAsync();
+
+            // Retorna true indicando que a confirmação da encomenda foi bem-sucedida
+            return true;
+        }
+
+
         // Método assíncrono para eliminar um detalhe temporário de encomenda com base no ID fornecido
         public async Task DeleteDetailTempAsync(int id)
         {
@@ -143,7 +199,9 @@ namespace SuperShop.Data
             {   //Vai buscar todas as encomendas que lá estao
                 //Vai à tabela Orders
                 return _context.Orders
-                    //Inclui todos os items da tabela Orders
+                        //Inclui todos os User's
+                        .Include(o => o.User)
+                        //Inclui todos os items da tabela Orders
                         .Include(o => o.Items)
                         //Temos que fazer ThenInclude porque a tabela Orders nao está
                         //diretamente ligada à tabela Products entre ela existe a tabela OrderDetails

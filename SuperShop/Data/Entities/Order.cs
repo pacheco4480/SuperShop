@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -41,6 +42,11 @@ namespace SuperShop.Data.Entities
         // sendo que, na prática, será uma lista de objetos OrderDetail.
         public IEnumerable<OrderDetail> Items { get; set; }
 
+        // Propriedade calculada que retorna o número de itens no pedido.
+        // Se Items for nulo, o número de linhas será 0.
+        [DisplayFormat(DataFormatString ="{0:N0}")]
+        public int Lines => Items == null ? 0 : Items.Count();
+
         // Propriedade calculada que retorna a quantidade total dos itens no pedido.
         // A anotação [DisplayFormat] formata a quantidade com duas casas decimais e separador de milhares.
         // Se Items for nulo, a quantidade total será 0.
@@ -52,5 +58,15 @@ namespace SuperShop.Data.Entities
         // Se Items for nulo, o valor total será 0.
         [DisplayFormat(DataFormatString = "{0:C2}")]
         public decimal Value => Items == null ? 0 : Items.Sum(i => i.Value);
+
+        // Propriedade que retorna a data do pedido convertida para o horário local do servidor.
+        // A anotação [Display] define o nome exibido para a propriedade na interface de utilizador.
+        // A anotação [DisplayFormat] formata a data e hora para o formato 'MM/dd/yyyy HH:mm',
+        // que exibe a data no formato 'Mês/Dia/Ano' e a hora em formato de 24 horas (HH:mm).
+        // Se a data do pedido (OrderDate) for nula, a propriedade retornará também nulo.
+        [Display(Name = "Order date")]
+        [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+        public DateTime? OrderDateLocal => this.OrderDate == null ? (DateTime?)null : this.OrderDate.ToLocalTime();
+
     }
 }

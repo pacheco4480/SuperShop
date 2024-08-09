@@ -129,5 +129,25 @@ namespace SuperShop.Controllers
             return RedirectToAction("Create");
         }
 
+        // Método assíncrono para confirmar um pedido baseado no nome do utilizador
+        public async Task<IActionResult> ConfirmOrder()
+        {
+            // Obtém o nome do utilizador atual a partir da identidade do utilizador
+            // e chama o método ConfirmOrderAsync do repositório para confirmar o pedido
+            var response = await _orderRepository.ConfirmOrderAsync(this.User.Identity.Name);
+
+            // Verifica se a confirmação do pedido foi bem-sucedida
+            if (response)
+            {
+                // Se o pedido foi confirmado com sucesso, redireciona para a ação "Index"
+                // A ação "Index" geralmente exibe uma lista de pedidos ou uma página de confirmação
+                return RedirectToAction("Index");
+            }
+
+            // Se a confirmação do pedido falhar (por exemplo, se não houver itens no pedido),
+            // redireciona o utilizador de volta para a ação "Create" para que possa ajustar o pedido
+            return RedirectToAction("Create");
+        }
+
     }
 }

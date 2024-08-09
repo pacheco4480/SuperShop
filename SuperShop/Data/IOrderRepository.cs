@@ -29,5 +29,9 @@ namespace SuperShop.Data
         // Método assíncrono que elimina um detalhe temporário de encomenda com base no ID fornecido.
         // Isto é útil para remover um item do carrinho de compras, por exemplo, quando um item é removido pelo utilizador.
         Task DeleteDetailTempAsync(int id);
+
+        // Método assíncrono para confirmar uma encomenda para um utilizador específico
+        // Retorna um valor booleano que indica se a confirmação da encomenda foi bem-sucedida ou não
+        Task<bool> ConfirmOrderAsync(string userName);
     }
 }
