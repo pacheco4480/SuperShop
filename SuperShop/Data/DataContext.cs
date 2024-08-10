@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SuperShop.Data.Entities;
 using System.Data.Common;
+using System.Linq;
 
 namespace SuperShop.Data
 {
@@ -39,5 +40,24 @@ namespace SuperShop.Data
             
         
         }
+
+        // Habilitar a regra de apagar em cascata (Cascade Delete Rule)
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    // Obtém todas as chaves estrangeiras no modelo que têm comportamento de exclusão em cascata.
+        //    var cascadeFKs = modelBuilder.Model
+        //        .GetEntityTypes() // Procura todas as tabelas.
+        //        .SelectMany(t => t.GetForeignKeys()) // Seleciona todas as chaves estrangeiras.
+        //        .Where(fk => !fk.IsOwnership && fk.DeleteBehavior == DeleteBehavior.Cascade); // Filtra as que têm comportamento em cascata.
+
+        //    // Altera o comportamento de exclusão de cascata para restrito para todas as chaves estrangeiras filtradas.
+        //    foreach (var fk in cascadeFKs)
+        //    {
+        //        fk.DeleteBehavior = DeleteBehavior.Restrict;
+        //    }
+
+        //    // Chama o método base para garantir que outras configurações do modelo sejam aplicadas.
+        //    base.OnModelCreating(modelBuilder);
+        //}
     }
 }

@@ -81,7 +81,7 @@ namespace SuperShop.Controllers
         //Precisamos sempre das duas GET e POST uma mostra e outra recebe os valores
         //Tendo este [Authorize] só os utilizadores logados vao conseguir criar produtos
         //Roles - Só os admin's logados vao conseguir criar produtos
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
@@ -238,17 +238,45 @@ namespace SuperShop.Controllers
         }
 
         // POST: Products/Delete/5
-        //Aqui quando houver uma action chamada "Delete" ele vai fazer o "DeleteConfirmed"
+        // Método para lidar com a exclusão de um produto confirmado
+        // Executado quando uma solicitação POST é feita para a ação "Delete"
+        //Aqui quando houver uma action chamada "Delete" ele vai fazer o "DeleteConfirmed
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            // Obtém o produto pelo ID usando o repositório de produtos
             var product = await _productRepository.GetByIdAsync(id);
-            //Aqui remove em memória
-            await _productRepository.DeleteAsync(product);
-            //Depois quando apagar redireciona para a view Index
-            return RedirectToAction(nameof(Index));
+
+            try
+            {
+
+                // throw new Exception("Exceção de Teste");
+                // Remove o produto da memória (marcação para exclusão)
+                await _productRepository.DeleteAsync(product);
+
+                // Redireciona o utilizador para a página Index após a exclusão bem-sucedida
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException ex)
+            {
+                // Verifica se a exceção interna contém uma mensagem de erro relacionada a "DELETE"
+                if (ex.InnerException != null && ex.InnerException.Message.Contains("DELETE"))
+                {
+                    // Define o título da mensagem de erro no ViewBag
+                    ViewBag.ErrorTitle = $"{product.Name} provavelmente está a ser usado!";
+                    // Define a mensagem de erro detalhada no ViewBag
+                    ViewBag.ErrorMessage = $"{product.Name} não pode ser apagado, visto haver encomendas que o usam.</br> </br>" +
+                        $"Experimente primeiro apagar todas as encomendas que o estão a usar," +
+                        $" e tente novamente apagá-lo.";
+                }
+
+                // Retorna a view de erro com as mensagens configuradas
+                return View("Error");
+            }
         }
+
 
         //Este action é só para mostrar a página do ProductNotFound
         //Depois de elaborado este metodo temos que criar a respectiva View para o ProductNotFound para isso
