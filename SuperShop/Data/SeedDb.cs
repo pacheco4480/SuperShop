@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -42,6 +43,28 @@ namespace SuperShop.Data
             //Roles - Metodo para ver se o Role Customer existe, se nao existir cria
             await _userHelper.CheckRoleAsync("Customer");
 
+            //Países e cidades
+            // Verifica se existem países na base de dados
+            if (!_context.Countries.Any())
+            {
+                // Cria uma lista de cidades para adicionar a um país
+                var cities = new List<City>
+                {
+                    new City { Name = "Lisboa" },
+                    new City { Name = "Porto" },
+                    new City { Name = "Faro" }
+                };
+
+                // Adiciona um novo país com a lista de cidades
+                _context.Countries.Add(new Country
+                {
+                    Cities = cities,
+                    Name = "Portugal"
+                });
+
+                // Salva as alterações na base de dados
+                await _context.SaveChangesAsync();
+            }
 
             //Primeiro ver se ja existe o utillizador ou nao (este utilizador vai ser o admin)
             var user = await _userHelper.GetUserByEmailAsync("david@gmail.com");
@@ -55,7 +78,11 @@ namespace SuperShop.Data
                     LastName = "Pacheco",
                     Email = "david@gmail.com",
                     UserName = "david@gmail.com",
-                    PhoneNumber = "2155485"
+                    PhoneNumber = "2155485",
+                    Address = "Rua Jau 33",
+                    //Países e cidades
+                    CityId = _context.Countries.FirstOrDefault().Cities.FirstOrDefault().Id,
+                    City = _context.Countries.FirstOrDefault().Cities.FirstOrDefault()
                 };
 
                 //Utilizar a classe UserManager para criar o utilizador

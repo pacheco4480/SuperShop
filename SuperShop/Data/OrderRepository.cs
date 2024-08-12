@@ -168,6 +168,24 @@ namespace SuperShop.Data
             await _context.SaveChangesAsync();
         }
 
+        // Método assíncrono para processar a entrega de uma encomenda.
+        public async Task DeliverOrder(DeliveryViewModel model)
+        {
+            // Procura a encomenda na base de dados pelo ID.
+            var order = await _context.Orders.FindAsync(model.Id);
+            if (order == null)
+            {
+                // Se a encomenda não for encontrada, sai do método.
+                return;
+            }
+
+            // Atualiza a data de entrega da encomenda.
+            order.DeliveryDate = model.DeliveryDate;
+            _context.Orders.Update(order);
+
+            // Guarda as alterações na base de dados de forma assíncrona.
+            await _context.SaveChangesAsync();
+        }
 
         public async Task<IQueryable<OrderDetailTemp>> GetDetailTempsAsync(string userName)
         {
@@ -218,6 +236,12 @@ namespace SuperShop.Data
                 // Filtra as encomendas pelo utilizador
                 .Where(o => o.User == user)
                 .OrderByDescending(o => o.OrderDate);
+        }
+
+        // Método assíncrono para obter uma encomenda específica pelo ID.
+        public async Task<Order> GetOrderAsync(int id)
+        {
+            return await _context.Orders.FindAsync(id);
         }
 
         // Método para modificar a quantidade de um item temporário no pedido

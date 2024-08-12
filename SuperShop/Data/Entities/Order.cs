@@ -24,13 +24,11 @@ namespace SuperShop.Data.Entities
         public DateTime OrderDate { get; set; }
 
         // Propriedade que representa a data de entrega do pedido.
-        // A anotação [Required] indica que esta propriedade não pode ser nula.
         // A anotação [Display] define o nome exibido para a propriedade na interface de utilizador.
         // A anotação [DisplayFormat] formata a data para o formato 'yyyy/MM/dd hh:mm tt'.
-        [Required]
         [Display(Name = "Delivery date")]
         [DisplayFormat(DataFormatString = "{0:yyyy/MM/dd hh:mm tt}", ApplyFormatInEditMode = false)]
-        public DateTime DeliveryDate { get; set; }
+        public DateTime? DeliveryDate { get; set; }
 
         // Propriedade que representa o usuário associado ao pedido.
         // A anotação [Required] indica que esta propriedade não pode ser nula.

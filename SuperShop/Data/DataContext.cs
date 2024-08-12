@@ -30,6 +30,14 @@ namespace SuperShop.Data
         // DbSet é responsável por criar e gerenciar a tabela OrderDetailsTemp.
         public DbSet<OrderDetailTemp> OrderDetailsTemp { get; set; }
 
+        // Propriedade que representa a tabela Countries no banco de dados.
+        // DbSet<Country> é responsável por criar e gerenciar a tabela de países.
+        public DbSet<Country> Countries { get; set; }
+
+        // Propriedade que representa a tabela Cities no banco de dados.
+        // DbSet<City> é responsável por criar e gerenciar a tabela de cidades.
+        public DbSet<City> Cities { get; set; }
+
 
         //Cntrl + . sobre "DbContextOptions" para injetarmos o DataContext da Entitie Framework Core
         //na nossa para ele conseguir reconhecer o "DbContextOptions"

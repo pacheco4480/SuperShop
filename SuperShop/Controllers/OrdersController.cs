@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using SuperShop.Data;
 using SuperShop.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace SuperShop.Controllers
@@ -147,6 +148,58 @@ namespace SuperShop.Controllers
             // Se a confirmação do pedido falhar (por exemplo, se não houver itens no pedido),
             // redireciona o utilizador de volta para a ação "Create" para que possa ajustar o pedido
             return RedirectToAction("Create");
+        }
+
+        // Esta ação é responsável por exibir a vista para a entrega de uma encomenda.
+        // O parâmetro id é opcional e pode ser nulo, por isso verificamos se ele tem um valor.
+        //Depois de elaborado este metodo temos que criar a respectiva View para o Deliver para isso
+        //clicamos com o botao direito sobre Deliver() e fazemos Add View - Razor View - Add - Add
+        public async Task<IActionResult> Deliver(int? id)
+        {
+            // Verifica se o id é nulo. Se for, retorna um resultado de "não encontrado" (404).
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            // Obtém a encomenda correspondente ao id fornecido. O método GetOrderAsync retorna a encomenda com base no ID.
+            var order = await _orderRepository.GetOrderAsync(id.Value);
+
+            // Verifica se a encomenda foi encontrada. Se não for, retorna um resultado de "não encontrado" (404).
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            // Cria um novo modelo de vista (DeliveryViewModel) e preenche com os dados da encomenda.
+            // Define a data de entrega como a data atual.
+            var model = new DeliveryViewModel
+            {
+                Id = order.Id,
+                DeliveryDate = DateTime.Today
+            };
+
+            // Retorna a vista com o modelo preenchido. A vista exibirá o formulário para processar a entrega.
+            return View(model);
+        }
+
+        // Esta ação processa o formulário enviado para confirmar a entrega da encomenda.
+        // O método HTTP POST é utilizado para enviar dados para o servidor.
+        [HttpPost]
+        public async Task<IActionResult> Deliver(DeliveryViewModel model)
+        {
+            // Verifica se o modelo é válido, ou seja, se os dados fornecidos no formulário estão corretos.
+            if (ModelState.IsValid)
+            {
+                // Se o modelo for válido, chama o método DelivOrder do repositório para gravar a entrega.
+                await _orderRepository.DeliverOrder(model);
+
+                // Após a confirmação, redireciona para a ação "Index", que provavelmente exibe a lista de encomendas.
+                return RedirectToAction("Index");
+            }
+
+            // Se o modelo não for válido, retorna à vista com o modelo, permitindo ao utilizador corrigir os erros.
+            return View(model);
         }
 
     }

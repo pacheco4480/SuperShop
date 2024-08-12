@@ -33,5 +33,14 @@ namespace SuperShop.Data
         // Método assíncrono para confirmar uma encomenda para um utilizador específico
         // Retorna um valor booleano que indica se a confirmação da encomenda foi bem-sucedida ou não
         Task<bool> ConfirmOrderAsync(string userName);
+
+
+        // Método assíncrono que processa a entrega de uma encomenda, recebendo um modelo de entrega como parâmetro.
+        // Este método permite atualizar o status de entrega de um pedido.
+        Task DeliverOrder(DeliveryViewModel model);
+
+        // Método assíncrono que retorna uma encomenda específica com base no ID fornecido.
+        // Isso é útil para acessar os detalhes de um pedido em particular.
+        Task<Order> GetOrderAsync(int id);
     }
 }
