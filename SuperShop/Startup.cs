@@ -7,12 +7,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
 using SuperShop.Data;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SuperShop
@@ -52,6 +54,28 @@ namespace SuperShop
                 cfg.Password.RequiredLength = 6;
             })
                 .AddEntityFrameworkStores<DataContext>();
+
+            // Configura os serviços de autenticação da aplicação
+            services.AddAuthentication()
+                // Adiciona suporte para autenticação com Cookies
+                .AddCookie()
+                // Adiciona suporte para autenticação com JWT (JSON Web Tokens)
+                .AddJwtBearer(cfg =>
+                {
+                    // Configura os parâmetros de validação do token JWT
+                    cfg.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        // Define o emissor (issuer) do token JWT. O emissor deve ser o mesmo que foi usado para assinar o token.
+                        ValidIssuer = this.Configuration["Tokens:Issuer"],
+
+                        // Define a audiência (audience) do token JWT. A audiência é a parte que deve consumir o token.
+                        ValidAudience = this.Configuration["Tokens:Audience"],
+
+                        // Define a chave usada para assinar o token JWT. Esta chave deve ser a mesma que foi usada para gerar o token.
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(this.Configuration["Tokens:Key"]))
+                    };
+                });
 
 
             //Cria um serviço que utilize o nosso DataContext que vai usar o SQL Server com a connection string

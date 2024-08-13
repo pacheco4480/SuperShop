@@ -1,11 +1,17 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using SuperShop.Data;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using SuperShop.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -14,15 +20,21 @@ namespace SuperShop.Controllers
     public class AccountController : Controller
     {
         private readonly IUserHelper _userHelper;
+        private readonly IConfiguration _configuration;
         private readonly ICountryRepository _countryRepository;
 
         //Construtor
         //Vamos injetar o IUserHelper para poder ir buscar os respectivos metodos
         //Ctrl  + . em cima do userHelper e clicar em "Create and assign field userHelper"
         //Ctrl  + . em cima do countryRepository e clicar em "Create and assign field countryRepository"
-        public AccountController(IUserHelper userHelper, ICountryRepository countryRepository)
+        //Ctrl  + . em cima do configuration e clicar em "Create and assign field configuration"
+        public AccountController(
+            IUserHelper userHelper,
+            IConfiguration configuration,
+            ICountryRepository countryRepository)
         {
             _userHelper = userHelper;
+            _configuration = configuration;
             _countryRepository = countryRepository;
         }
 
@@ -306,6 +318,74 @@ namespace SuperShop.Controllers
             return this.View(model);
         }
 
+        // Esta action é responsável por criar um token JWT para autenticar um utilizador.
+        // Recebe um modelo de login contendo o nome de utilizador e a password através de uma requisição POST.
+        // Se o modelo for válido e a password for correta, o método gera um token JWT que pode ser usado para autenticação em chamadas subsequentes à API.
+        // O token inclui informações sobre o utilizador e expira após um período definido (15 dias neste caso).
+        // Retorna um resultado HTTP 201 Created com o token e a data de expiração se tudo estiver correto,
+        // ou um erro HTTP 400 Bad Request se o modelo for inválido ou o utilizador não for encontrado.
+        [HttpPost]
+        public async Task<IActionResult> CreateToken([FromBody] LoginViewModel model)
+        {
+            // Verifica se o modelo recebido é válido
+            if (this.ModelState.IsValid)
+            {
+                // Obtém o utilizador com base no email fornecido no modelo de login
+                var user = await _userHelper.GetUserByEmailAsync(model.Username);
+
+                // Se o utilizador for encontrado
+                if (user != null)
+                {
+                    // Valida a password fornecida com a do utilizador
+                    var result = await _userHelper.ValidatePasswordAsync(
+                        user,
+                        model.Password);
+
+                    // Se a password estiver correta
+                    if (result.Succeeded)
+                    {
+                        // Define as claims (declarações) que serão incluídas no token JWT
+                        var claims = new[]
+                        {
+                    // A claim "sub" representa o subject (utilizador) do token, neste caso o email do utilizador
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                    
+                    // A claim "jti" é um identificador único para o token, geralmente usado para prevenir a reutilização
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                };
+
+                        // Cria uma chave simétrica para assinar o token, usando uma chave configurada nas configurações da aplicação
+                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Tokens:Key"]));
+
+                        // Define as credenciais de assinatura usando o algoritmo HMAC-SHA256
+                        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                        // Cria o token JWT com as claims, as credenciais de assinatura, o emissor, o público e a data de expiração
+                        var token = new JwtSecurityToken(
+                            _configuration["Tokens:Issuer"], // Emissor do token
+                            _configuration["Tokens:Audience"], // Público destinatário do token
+                            claims, // Claims que definem o conteúdo do token
+                            expires: DateTime.UtcNow.AddDays(15), // Define a expiração do token para 15 dias a partir da criação
+                            signingCredentials: credentials); // Credenciais para assinar o token
+
+                        // Cria um objeto para devolver como resultado, contendo o token gerado e a sua data de expiração
+                        var results = new
+                        {
+                            token = new JwtSecurityTokenHandler().WriteToken(token), // Converte o token para uma string
+                            expiration = token.ValidTo // Data e hora de expiração do token
+                        };
+
+                        // Retorna uma resposta HTTP 201 Created com o token e a data de expiração no corpo da resposta
+                        return this.Created(string.Empty, results);
+                    }
+                }
+            }
+
+            // Se o modelo não for válido ou o utilizador não for encontrado, retorna um BadRequest (400) com as mensagens de erro
+            return BadRequest("Dados inválidos ou utilizador não encontrado.");
+        }
+
+
         //Este action é só para mostrar a página do NotAuthorized
         //Depois de elaborado este metodo temos que criar a respectiva View para o NotAuthorized para isso
         //clicamos com o botao direito sobre NotAuthorized() e fazemos Add View - Razor View - Add
@@ -332,6 +412,7 @@ namespace SuperShop.Controllers
             // As cidades são ordenadas por nome para facilitar a seleção na interface do utilizador.
             return Json(country.Cities.OrderBy(c => c.Name));
         }
+
 
     }
 }

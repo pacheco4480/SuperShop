@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SuperShop.Data;
 
@@ -6,6 +8,8 @@ namespace SuperShop.Controllers.API
 {
     [Route("api/[controller]")]
     [ApiController]
+    //Ctrl  + . em cima do JwtBearerDefaults install package Microsoft.AspNetCore.Authentication.JwtBearer
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ProductsController : Controller
     {   
         private readonly IProductRepository _productRepository;
