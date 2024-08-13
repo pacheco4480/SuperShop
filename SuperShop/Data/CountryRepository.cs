@@ -120,49 +120,49 @@ namespace SuperShop.Data
                 .FirstOrDefaultAsync();
         }
 
-        //// Obtém uma lista de países formatada para ser usada em um dropdown (lista suspensa).
-        //// Retorna uma lista de SelectListItem com países ordenados por nome.
-        //public IEnumerable<SelectListItem> GetComboCountries()
-        //{
-        //    var list = _context.Countries.Select(c => new SelectListItem
-        //    {
-        //        Text = c.Name, // O texto exibido no dropdown.
-        //        Value = c.Id.ToString() // O valor associado ao item do dropdown.
-        //    }).OrderBy(l => l.Text).ToList(); // Ordena os países por nome.
+        // Obtém uma lista de países formatada para ser usada em um dropdown (lista suspensa).
+        // Retorna uma lista de SelectListItem com países ordenados por nome.
+        public IEnumerable<SelectListItem> GetComboCountries()
+        {
+            var list = _context.Countries.Select(c => new SelectListItem
+            {
+                Text = c.Name, // O texto exibido no dropdown.
+                Value = c.Id.ToString() // O valor associado ao item do dropdown.
+            }).OrderBy(l => l.Text).ToList(); // Ordena os países por nome.
 
-        //    // Adiciona uma opção de seleção inicial ao dropdown.
-        //    list.Insert(0, new SelectListItem
-        //    {
-        //        Text = "(Select a country...)", // Texto para a opção de seleção.
-        //        Value = "0" // Valor da opção de seleção.
-        //    });
+            // Adiciona uma opção de seleção inicial ao dropdown.
+            list.Insert(0, new SelectListItem
+            {
+                Text = "(Select a country...)", // Texto para a opção de seleção.
+                Value = "0" // Valor da opção de seleção.
+            });
 
-        //    return list;
-        //}
+            return list;
+        }
 
-        //// Obtém uma lista de cidades formatada para ser usada em um dropdown baseado no Id do país.
-        //// Retorna uma lista de SelectListItem com cidades ordenadas por nome.
-        //public IEnumerable<SelectListItem> GetComboCities(int countryId)
-        //{
-        //    var country = _context.Countries.Find(countryId);
-        //    var list = new List<SelectListItem>();
-        //    if (country != null)
-        //    {
-        //        list = _context.Cities.Select(c => new SelectListItem
-        //        {
-        //            Text = c.Name, // O texto exibido no dropdown.
-        //            Value = c.Id.ToString() // O valor associado ao item do dropdown.
-        //        }).OrderBy(l => l.Text).ToList(); // Ordena as cidades por nome.
+        // Obtém uma lista de cidades formatada para ser usada em um dropdown baseado no Id do país.
+        // Retorna uma lista de SelectListItem com cidades ordenadas por nome.
+        public IEnumerable<SelectListItem> GetComboCities(int countryId)
+        {
+            var country = _context.Countries.Find(countryId);
+            var list = new List<SelectListItem>();
+            if (country != null)
+            {
+                list = _context.Cities.Select(c => new SelectListItem
+                {
+                    Text = c.Name, // O texto exibido no dropdown.
+                    Value = c.Id.ToString() // O valor associado ao item do dropdown.
+                }).OrderBy(l => l.Text).ToList(); // Ordena as cidades por nome.
 
-        //        // Adiciona uma opção de seleção inicial ao dropdown.
-        //        list.Insert(0, new SelectListItem
-        //        {
-        //            Text = "(Select a city...)", // Texto para a opção de seleção.
-        //            Value = "0" // Valor da opção de seleção.
-        //        });
-        //    }
+                // Adiciona uma opção de seleção inicial ao dropdown.
+                list.Insert(0, new SelectListItem
+                {
+                    Text = "(Select a city...)", // Texto para a opção de seleção.
+                    Value = "0" // Valor da opção de seleção.
+                });
+            }
 
-        //    return list;
-        //}
+            return list;
+        }
     }
 }

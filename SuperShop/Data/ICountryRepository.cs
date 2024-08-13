@@ -7,24 +7,34 @@ using System.Threading.Tasks;
 
 namespace SuperShop.Data
 {
+    // Interface que define os métodos para manipulação de dados relacionados a países e cidades.
     public interface ICountryRepository : IGenericRepository<Country>
     {
-        // Método que devolve os países com as respetivas cidades
+        // Método que retorna uma consulta (IQueryable) contendo os países com suas cidades associadas.
         IQueryable GetCountriesWithCities();
 
-        // Método que através do ID devolve o objeto país com as cidades
+        // Método assíncrono que, dado o ID de um país, retorna o objeto Country com suas cidades.
         Task<Country> GetCountryWithCitiesAsync(int id);
 
-        // Método que devolve o objeto cidade através do ID
+        // Método assíncrono que, dado o ID de uma cidade, retorna o objeto City correspondente.
         Task<City> GetCityAsync(int id);
 
-        // Recebe o modelo e adiciona a cidade
+        // Método assíncrono que recebe um modelo de vista (CityViewModel) e adiciona uma nova cidade.
         Task AddCityAsync(CityViewModel model);
 
-        // Faz o update e devolve um inteiro que será o ID da cidade atualizada
+        // Método assíncrono que atualiza uma cidade existente e retorna um inteiro representando o ID do país da cidade atualizada.
         Task<int> UpdateCityAsync(City city);
 
-        // Faz o delete e devolve um inteiro que será o ID da cidade removida
+        // Método assíncrono que exclui uma cidade existente e retorna um inteiro representando o ID do país da cidade removida.
         Task<int> DeleteCityAsync(City city);
+
+        // Método que retorna uma lista de SelectListItem para preencher um dropdown com países.
+        IEnumerable<SelectListItem> GetComboCountries();
+
+        // Método que, dado o ID de um país, retorna uma lista de SelectListItem para preencher um dropdown com as cidades desse país.
+        IEnumerable<SelectListItem> GetComboCities(int countryId);
+
+        // Método assíncrono que, dado um objeto City, retorna o objeto Country correspondente ao país dessa cidade.
+        Task<Country> GetCountryAsync(City city);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SuperShop.Data;
 using SuperShop.Data.Entities;
 using SuperShop.Helpers;
 using SuperShop.Models;
@@ -13,13 +14,16 @@ namespace SuperShop.Controllers
     public class AccountController : Controller
     {
         private readonly IUserHelper _userHelper;
+        private readonly ICountryRepository _countryRepository;
 
         //Construtor
         //Vamos injetar o IUserHelper para poder ir buscar os respectivos metodos
         //Ctrl  + . em cima do userHelper e clicar em "Create and assign field userHelper"
-        public AccountController(IUserHelper userHelper)
+        //Ctrl  + . em cima do countryRepository e clicar em "Create and assign field countryRepository"
+        public AccountController(IUserHelper userHelper, ICountryRepository countryRepository)
         {
             _userHelper = userHelper;
+            _countryRepository = countryRepository;
         }
 
         //Este action é só para mostrar a página do Login e tambem para dizer
@@ -72,46 +76,76 @@ namespace SuperShop.Controllers
         }
 
 
-        //Este action é só para mostrar a página do Register
-        //Depois de elaborado este metodo temos que criar a respectiva View para o Register para isso
-        //clicamos com o botao direito sobre Register() e fazemos Add View - Razor View - Add
+        // Esta ação é responsável por exibir a página de registro de um novo usuário.
+        // Depois de implementar este método, é necessário criar a respectiva View para o Register.
+        // Para isso, clique com o botão direito sobre Register() e selecione Add View - Razor View - Add.
         public IActionResult Register()
-        {
-            return View();
+        {   //Combobox
+            // Cria uma nova instância do modelo RegisterNewUserViewModel, que será passado para a view.
+            // Este modelo inclui listas para preencher os comboboxes de países e cidades.
+            var model = new RegisterNewUserViewModel
+            {
+                // Obtém uma lista de países para preencher o combobox de países.
+                Countries = _countryRepository.GetComboCountries(),
+
+                // Inicializa a lista de cidades com o combobox vazio, pois nenhum país foi selecionado inicialmente.
+                // 0 é usado como valor padrão até que um país seja selecionado.
+                Cities = _countryRepository.GetComboCities(0)
+            };
+
+            // Retorna a view de registo com o modelo criado, permitindo ao utilizador preencher os dados necessários.
+            return View(model);
         }
 
 
-        //Este action é para fazer o Register
+
+        // Esta ação é responsável por processar o registo de um novo utilizador no sistema.
+        // O método utiliza a anotação [HttpPost] para indicar que ele lida com requisições HTTP POST,
+        // que são feitas quando o formulário de registo é submetido.
         [HttpPost]
-        //Recebe um RegisterNewUserViewModel
+        // Recebe um objeto do tipo RegisterNewUserViewModel que contém os dados do utilizador a ser registado.
         public async Task<IActionResult> Register(RegisterNewUserViewModel model)
-        {   //Se o modelo é válido
+        {
+            // Verifica se o modelo é válido, ou seja, se todos os campos obrigatórios estão preenchidos corretamente.
             if (ModelState.IsValid)
-            {   //Ver se o user ja existe
+            {
+                //Combobox - Obtém a cidade selecionada pelo utilizador através do repositório de países.
+                // A cidade é verificada antes de criar o utilizador para garantir que ela existe.
+                var city = await _countryRepository.GetCityAsync(model.CityId);
+
+                // Verifica se já existe um utilizador com o email fornecido (Username).
                 var user = await _userHelper.GetUserByEmailAsync(model.Username);
-                //Se o user nao existe
+
+                // Se o utilizador não existir, procede com a criação de um novo utilizador.
                 if (user == null)
-                {   //Cria um user novo
+                {
+                    // Cria uma nova instância do utilizador com os dados fornecidos pelo modelo.
                     user = new User
                     {
                         FirstName = model.FirstName,
                         LastName = model.LastName,
-                        Email = model.Username,
-                        UserName = model.Username
+                        Email = model.Username, // O email também é usado como nome de utilizador.
+                        UserName = model.Username,
+                        Address = model.Address,
+                        PhoneNumber = model.PhoneNumber,
+                        CityId = model.CityId,
+                        City = city // Associa a cidade obtida ao utilizador.
                     };
 
-                    //Adiciona o novo User
+                    // Tenta adicionar o novo utilizador ao sistema com a password fornecida.
                     var result = await _userHelper.AddUserAsync(user, model.Password);
-                    //Se nao conseguiu criar o User
+
+                    // Verifica se o utilizador foi criado com sucesso.
                     if (result != IdentityResult.Success)
-                    {//Vai aparecer uma mensagem de erro
-                        ModelState.AddModelError(string.Empty, "The User couldn't be created");
-                        //Aqui passamos o model para os campos nao ficarem em branco e o utilizador poder corrigir
-                        //aquilo que entender sem ter que preencher tudo novamente
+                    {
+                        // Se houver um erro ao criar o utilizador, adiciona uma mensagem de erro ao modelo.
+                        ModelState.AddModelError(string.Empty, "Não foi possível criar o utilizador.");
+
+                        // Retorna a vista com o modelo atual para que o utilizador possa corrigir os erros.
                         return View(model);
                     }
 
-                    //Se consegui criar o User é construido o LoginViewModel
+                    // Se o utilizador for criado com sucesso, prepara o modelo para efetuar o login.
                     var loginViewModel = new LoginViewModel
                     {
                         Password = model.Password,
@@ -119,69 +153,118 @@ namespace SuperShop.Controllers
                         Username = model.Username
                     };
 
-                    //Aqui está o Sigin, aqui vai tentar logar a partir do loginViewModel
+                    // Tenta efetuar o login automaticamente com o novo utilizador.
                     var result2 = await _userHelper.LoginAsync(loginViewModel);
-                    //Se consegue logar
+
+                    // Se o login for bem-sucedido, redireciona o utilizador para a página inicial.
                     if (result2.Succeeded)
                     {
                         return RedirectToAction("Index", "Home");
                     }
-                    //Se nao se consegue Logar
-                    ModelState.AddModelError(string.Empty, "The User couldn't be logged");
-                }                
+
+                    // Se o login falhar, adiciona uma mensagem de erro ao modelo.
+                    ModelState.AddModelError(string.Empty, "Não foi possível iniciar sessão com o utilizador.");
+                }
             }
+
+            // Se o modelo não for válido ou se houver erros, retorna a vista com o modelo atual.
             return View(model);
         }
 
-        //Este action é só para mostrar a página do ChangeUser
-        //Depois de elaborado este metodo temos que criar a respectiva View para o ChangeUser para isso
-        //clicamos com o botao direito sobre ChangeUser() e fazemos Add View - Razor View - Add
+
+        // Esta ação é responsável por exibir a página de alteração de dados do utilizador (ChangeUser).
+        // Após desenvolver este método, é necessário criar a respetiva View para o ChangeUser.
+        // Para isso, clica-se com o botão direito sobre ChangeUser(), seleciona-se Add View, depois Razor View, e por fim Add.
         public async Task<IActionResult> ChangeUser()
-        {   //ver se o User existe
+        {
+            // Obtém o utilizador atual a partir do email armazenado na identidade do utilizador logado.
             var user = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
-            //Construir o modelo
+
+            // Cria um novo modelo de vista para alteração de dados do utilizador.
             var model = new ChangeUserViewModel();
-            //Se o suer existir passar os dados existentes sobre esse user
+
+            // Se o utilizador existir, preenche os dados existentes no modelo para exibição na vista.
             if (user != null)
             {
                 model.FirstName = user.FirstName;
                 model.LastName = user.LastName;
+                model.Address = user.Address;
+                model.PhoneNumber = user.PhoneNumber;
+
+                //Combobox - Obtém a cidade do utilizador e preenche as comboboxes de cidades e países.
+                var city = await _countryRepository.GetCityAsync(user.CityId);
+
+                if (city != null)
+                {
+                    // Se a cidade existir, obtém o país correspondente.
+                    var country = await _countryRepository.GetCountryAsync(city);
+
+                    if (country != null)
+                    {
+                        // Preenche os campos do modelo com os dados do país e das cidades correspondentes.
+                        model.CountryId = country.Id;
+                        model.Cities = _countryRepository.GetComboCities(country.Id);
+                        model.Countries = _countryRepository.GetComboCountries();
+                        model.CityId = user.CityId;
+                    }
+                }
             }
 
+            // Caso não tenha sido possível carregar as cidades anteriormente, preenche as comboboxes com listas padrão.
+            model.Cities = _countryRepository.GetComboCities(model.CountryId);
+            model.Countries = _countryRepository.GetComboCountries();
+
+            // Retorna a vista com o modelo preenchido, permitindo que o utilizador visualize e altere os seus dados.
             return View(model);
         }
 
 
 
-        //Este action é para fazer o ChangeUser
+
+        // Este método processa a submissão do formulário de alteração de dados do utilizador (ChangeUser).
         [HttpPost]
-        //Recebe um ChangeUserViewModel
+        // O método recebe um objeto ChangeUserViewModel que contém os dados preenchidos pelo utilizador na vista.
         public async Task<IActionResult> ChangeUser(ChangeUserViewModel model)
         {
+            // Verifica se os dados enviados no modelo são válidos.
             if (ModelState.IsValid)
             {
-                //ver se o User existe
+                // Obtém o utilizador atual a partir do email armazenado na identidade do utilizador logado.
                 var user = await _userHelper.GetUserByEmailAsync(this.User.Identity.Name);
-                //Se o suer existir passar os dados existentes sobre esse user
+
+                // Se o utilizador existir, atualiza os dados com as informações fornecidas no modelo.
                 if (user != null)
                 {
+                    // Obtém a cidade selecionada pelo utilizador para associá-la ao utilizador.
+                    var city = await _countryRepository.GetCityAsync(model.CityId);
+
+                    // Atualiza os dados do utilizador com as informações do modelo.
                     user.FirstName = model.FirstName;
                     user.LastName = model.LastName;
-                    //Update mudando o FirstName e LastName
+                    user.Address = model.Address;
+                    user.PhoneNumber = model.PhoneNumber;
+                    user.CityId = model.CityId;
+                    user.City = city;
+
+                    // Tenta atualizar os dados do utilizador no repositório.
                     var response = await _userHelper.UpdateUserAsync(user);
+
+                    // Se a atualização for bem-sucedida, exibe uma mensagem de confirmação ao utilizador.
                     if (response.Succeeded)
                     {
-                        ViewBag.UserMessage = "User updated!";
+                        ViewBag.UserMessage = "Utilizador atualizado com sucesso!";
                     }
-                    //Se nao conseguir fazer o update manda uma mensagem de erro
+                    // Se a atualização falhar, exibe a primeira mensagem de erro retornada pelo repositório.
                     else
                     {
                         ModelState.AddModelError(string.Empty, response.Errors.FirstOrDefault().Description);
                     }
                 }
             }
+            // Retorna a vista com o modelo atual, permitindo que o utilizador corrija qualquer erro nos dados enviados.
             return View(model);
         }
+
 
         //Este action é só para mostrar a página do ChangePassword
         //Depois de elaborado este metodo temos que criar a respectiva View para o ChangePassword para isso
@@ -230,5 +313,25 @@ namespace SuperShop.Controllers
         {
             return View();
         }
+
+        // Combobox - Esta ação serve para atualizar a lista de cidades numa combobox quando um país é selecionado
+        // noutra combobox. É uma ação auxiliar utilizada para preencher dinamicamente as cidades
+        // correspondentes ao país selecionado, sem necessidade de recarregar toda a página.
+        // Indica que o método responde a requisições HTTP POST.
+        [HttpPost]
+        // Define a rota para a ação, permitindo que ela seja acessada através da URL especificada.
+        [Route("Account/GetCitiesAsync")]
+        // Este método retorna um resultado JSON contendo as cidades associadas ao país selecionado.
+        public async Task<JsonResult> GetCitiesAsync(int countryId)
+        {
+            // Obtém o país com as suas cidades utilizando o repositório de países.
+            // O método GetCountryWithCitiesAsync retorna um objeto país que contém uma lista de cidades.
+            var country = await _countryRepository.GetCountryWithCitiesAsync(countryId);
+
+            // Retorna um resultado JSON ordenado com as cidades do país.
+            // As cidades são ordenadas por nome para facilitar a seleção na interface do utilizador.
+            return Json(country.Cities.OrderBy(c => c.Name));
+        }
+
     }
 }
