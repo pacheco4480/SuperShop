@@ -37,5 +37,18 @@ namespace SuperShop.Helpers
 
         // Método que valida a senha de um utilizador, devolvendo o resultado da validação.
         Task<SignInResult> ValidatePasswordAsync(User user, string password);
+
+        // Método que gera um token para confirmação de email e o envia para o email do utilizador.
+        // Esse token é utilizado para garantir que o email fornecido pelo utilizador é válido.
+        Task<string> GenerateEmailConfirmationTokenAsync(User user);
+
+        // Método que valida o token de confirmação de email recebido após o usuário clicar no link
+        // de confirmação enviado para o seu email. Se o token for válido, o email do utilizador é confirmado.
+        Task<IdentityResult> ConfirmEmailAsync(User user, string token);
+
+        // Método que retorna um objeto User baseado no ID do utilizador.
+        // Esse método é útil para obter informações detalhadas de um utilizador específico usando seu ID.
+        Task<User> GetUserByIdAsync(string userId);
+
     }
 }

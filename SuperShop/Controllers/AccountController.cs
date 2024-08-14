@@ -20,6 +20,7 @@ namespace SuperShop.Controllers
     public class AccountController : Controller
     {
         private readonly IUserHelper _userHelper;
+        private readonly IMailHelper _mailHelper;
         private readonly IConfiguration _configuration;
         private readonly ICountryRepository _countryRepository;
 
@@ -28,12 +29,15 @@ namespace SuperShop.Controllers
         //Ctrl  + . em cima do userHelper e clicar em "Create and assign field userHelper"
         //Ctrl  + . em cima do countryRepository e clicar em "Create and assign field countryRepository"
         //Ctrl  + . em cima do configuration e clicar em "Create and assign field configuration"
+        //Ctrl  + . em cima do mailHelper e clicar em "Create and assign field mailHelper"
         public AccountController(
             IUserHelper userHelper,
+            IMailHelper mailHelper,
             IConfiguration configuration,
             ICountryRepository countryRepository)
         {
             _userHelper = userHelper;
+            _mailHelper = mailHelper;
             _configuration = configuration;
             _countryRepository = countryRepository;
         }
@@ -121,16 +125,16 @@ namespace SuperShop.Controllers
             // Verifica se o modelo é válido, ou seja, se todos os campos obrigatórios estão preenchidos corretamente.
             if (ModelState.IsValid)
             {
-                //Combobox - Obtém a cidade selecionada pelo utilizador através do repositório de países.
-                // A cidade é verificada antes de criar o utilizador para garantir que ela existe.
-                var city = await _countryRepository.GetCityAsync(model.CityId);
-
                 // Verifica se já existe um utilizador com o email fornecido (Username).
                 var user = await _userHelper.GetUserByEmailAsync(model.Username);
 
                 // Se o utilizador não existir, procede com a criação de um novo utilizador.
                 if (user == null)
                 {
+                    // Obtém a cidade selecionada pelo utilizador através do repositório de países.
+                    // A cidade é verificada antes de criar o utilizador para garantir que ela existe.
+                    var city = await _countryRepository.GetCityAsync(model.CityId);
+
                     // Cria uma nova instância do utilizador com os dados fornecidos pelo modelo.
                     user = new User
                     {
@@ -151,37 +155,48 @@ namespace SuperShop.Controllers
                     if (result != IdentityResult.Success)
                     {
                         // Se houver um erro ao criar o utilizador, adiciona uma mensagem de erro ao modelo.
-                        ModelState.AddModelError(string.Empty, "Não foi possível criar o utilizador.");
+                        ModelState.AddModelError(string.Empty, "O utilizador não pôde ser criado.");
 
                         // Retorna a vista com o modelo atual para que o utilizador possa corrigir os erros.
                         return View(model);
                     }
 
-                    // Se o utilizador for criado com sucesso, prepara o modelo para efetuar o login.
-                    var loginViewModel = new LoginViewModel
-                    {
-                        Password = model.Password,
-                        RememberMe = false,
-                        Username = model.Username
-                    };
+                    // Gera um token de confirmação de email para o novo utilizador.
+                    string myToken = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
 
-                    // Tenta efetuar o login automaticamente com o novo utilizador.
-                    var result2 = await _userHelper.LoginAsync(loginViewModel);
-
-                    // Se o login for bem-sucedido, redireciona o utilizador para a página inicial.
-                    if (result2.Succeeded)
+                    // Cria um link de confirmação de email gerado na action ConfirmEmail será enviado para o utilizador.
+                    string tokenLink = Url.Action("ConfirmEmail", "Account", new
                     {
-                        return RedirectToAction("Index", "Home");
+                        userid = user.Id, // O ID do utilizador para a confirmação.
+                        token = myToken // O token gerado para a confirmação do email.
+                    }, protocol: HttpContext.Request.Scheme);
+
+                    // Envia um email ao utilizador com o link de confirmação.
+                    //Quando a pessoa carregar no tokenLink vai Confirmar(ConfirmEmail) o email e mandar dois parametros userid e token
+                    Response response = _mailHelper.SendEmail(model.Username, "Confirmação de Email",
+                        $"<h1>Confirmação de Email</h1>" +
+                        $"Para confirmar o seu email, " +
+                        $"por favor clique neste link:</br></br><a href=\"{tokenLink}\">Confirmar Email</a>");
+
+                    // Verifica se o email foi enviado com sucesso.
+                    if (response.IsSuccess)
+                    {
+                        // Se o email foi enviado com sucesso, adiciona uma mensagem de sucesso ao ViewBag.
+                        ViewBag.Message = "As instruções para confirmar o seu utilizador foram enviadas para o email.";
+
+                        // Retorna a vista com o modelo atual, mantendo os dados preenchidos.
+                        return View(model);
                     }
 
-                    // Se o login falhar, adiciona uma mensagem de erro ao modelo.
-                    ModelState.AddModelError(string.Empty, "Não foi possível iniciar sessão com o utilizador.");
+                    // Se o envio do email falhar, adiciona uma mensagem de erro ao modelo.
+                    ModelState.AddModelError(string.Empty, "O utilizador não pôde ser iniciado sessão.");
                 }
             }
 
             // Se o modelo não for válido ou se houver erros, retorna a vista com o modelo atual.
             return View(model);
         }
+
 
 
         // Esta ação é responsável por exibir a página de alteração de dados do utilizador (ChangeUser).
@@ -318,7 +333,7 @@ namespace SuperShop.Controllers
             return this.View(model);
         }
 
-        // Esta action é responsável por criar um token JWT para autenticar um utilizador.
+        // Esta action é responsável por criar um token JWT para a API para autenticar um utilizador.
         // Recebe um modelo de login contendo o nome de utilizador e a password através de uma requisição POST.
         // Se o modelo for válido e a password for correta, o método gera um token JWT que pode ser usado para autenticação em chamadas subsequentes à API.
         // O token inclui informações sobre o utilizador e expira após um período definido (15 dias neste caso).
@@ -384,6 +399,46 @@ namespace SuperShop.Controllers
             // Se o modelo não for válido ou o utilizador não for encontrado, retorna um BadRequest (400) com as mensagens de erro
             return BadRequest("Dados inválidos ou utilizador não encontrado.");
         }
+
+        // Este método é responsável por confirmar o email de um utilizador usando um token de confirmação.
+        // A ação é chamada quando o utilizador clica no link de confirmação enviado por email.
+        //Depois de elaborado esta action temos que criar a respectiva View para o ConfirmEmail para isso
+        //clicamos com o botao direito sobre ConfirmEmail() e fazemos Add View - Razor View - Add
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            // Verifica se o ID do utilizador ou o token estão vazios ou nulos.
+            // Se algum dos parâmetros estiver ausente, retorna um resultado NotFound (404).
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            {
+                return NotFound(); // Retorna uma página de erro 404 se os parâmetros forem inválidos.
+            }
+
+            // Obtém o utilizador com base no ID fornecido.
+            var user = await _userHelper.GetUserByIdAsync(userId);
+
+            // Verifica se o utilizador existe.
+            // Se o utilizador não for encontrado, retorna um resultado NotFound (404).
+            if (user == null)
+            {
+                return NotFound(); // Retorna uma página de erro 404 se o utilizador não for encontrado.
+            }
+
+            // Tenta confirmar o email do utilizador usando o token fornecido.
+            var result = await _userHelper.ConfirmEmailAsync(user, token);
+
+            // Verifica se a confirmação do email foi bem-sucedida.
+            if (!result.Succeeded)
+            {
+                // Se a confirmação falhar, pode-se adicionar lógica para lidar com erros,
+                // como adicionar uma mensagem de erro ao modelo ou redirecionar para uma página de erro.
+                // Neste momento, não há lógica adicional, mas pode-se adicionar uma mensagem ou redirecionar conforme necessário.
+            }
+
+            // Retorna uma vista indicando o resultado da confirmação do email.
+            // Pode-se personalizar a vista para mostrar uma mensagem de sucesso ou erro conforme necessário.
+            return View(); // Retorna a vista padrão, que pode ser personalizada para mostrar o resultado da confirmação.
+        }
+
 
 
         //Este action é só para mostrar a página do NotAuthorized

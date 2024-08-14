@@ -36,24 +36,40 @@ namespace SuperShop
             //Aqui estamos a usar a nosso entidade USer pois acresecntamos as propriedades FirstName e Lastname às propriedades predefenidadas
             //Caso nao quisessemos acrescentar propriedades às propriedades predefenidas bastava por "IdentityUser, IdentityRole"
             services.AddIdentity<User, IdentityRole>(cfg =>
-            {   //Aqui teoricamente deveria ser tudo true para fortelecer a password mas vamos optar por fazer
-                //assim para puder testar mais facilmente a criaçao dos utilizadores
-                //Nao pode haver email repetidos
+            {
+                // Configura o provedor de tokens para autenticação
+                cfg.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
+
+                // Requer que o email do utilizador seja confirmado para poder fazer login
+                cfg.SignIn.RequireConfirmedEmail = true;
+
+                // Requer que cada usuário tenha um email único
                 cfg.User.RequireUniqueEmail = true;
 
+                // Configurações de senha - Definimos estas configurações para facilitar os testes,
+                // mas para ambientes de produção, deve-se adotar configurações mais seguras.
+
+                // Não requer que a senha contenha um dígito
                 cfg.Password.RequireDigit = false;
 
+                // Não requer um número mínimo de caracteres únicos na senha
                 cfg.Password.RequiredUniqueChars = 0;
 
+                // Não requer que a senha contenha caracteres maiúsculos
                 cfg.Password.RequireUppercase = false;
 
+                // Não requer que a senha contenha caracteres minúsculos
                 cfg.Password.RequireLowercase = false;
 
+                // Não requer que a senha contenha caracteres não alfanuméricos (como símbolos)
                 cfg.Password.RequireNonAlphanumeric = false;
 
+                // Define o comprimento mínimo da senha como 6 caracteres
                 cfg.Password.RequiredLength = 6;
             })
-                .AddEntityFrameworkStores<DataContext>();
+             .AddDefaultTokenProviders() // Adiciona os provedores de token padrão usados para operações de autenticação
+            .AddEntityFrameworkStores<DataContext>();    // Configura a utilização do Entity Framework para armazenar
+                                                        // informações de identidade no banco de dados
 
             // Configura os serviços de autenticação da aplicação
             services.AddAuthentication()
@@ -95,6 +111,8 @@ namespace SuperShop
             services.AddScoped<IBlobHelper, BlobHelper>();
 
             services.AddScoped<IConverterHelper, ConverterHelper>();
+
+            services.AddScoped<IMailHelper, MailHelper>();
 
             // Assim que detectar que é preciso um repositório de produtos, ele vai automaticamente criar uma instância de ProductRepository
             // Usamos AddScoped porque este serviço pode ser criado várias vezes durante o tempo de vida de uma requisição HTTP

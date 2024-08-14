@@ -97,6 +97,10 @@ namespace SuperShop.Data
 
                 //Roles - Adicionar o Role que ja existe ao User
                 await _userHelper.AddUserToRoleAsync(user, "Admin");
+                //Email - Geramos o Token para poder confirmar
+                var token = await _userHelper.GenerateEmailConfirmationTokenAsync(user);
+                //Email - Confirmamos o utilizador
+                await _userHelper.ConfirmEmailAsync(user, token);
             }
 
             //Roles - Este Role verifica se o User tem o Role que queremos chekar
