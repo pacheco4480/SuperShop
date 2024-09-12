@@ -50,5 +50,15 @@ namespace SuperShop.Helpers
         // Esse método é útil para obter informações detalhadas de um utilizador específico usando seu ID.
         Task<User> GetUserByIdAsync(string userId);
 
+        // Método que gera um token para redefinição de senha.
+        // Este token é enviado para o email do utilizador para permitir que ele redefina a sua senha.
+        // Retorna o token gerado.
+        Task<string> GeneratePasswordResetTokenAsync(User user);
+
+        // Método que redefine a senha de um utilizador.
+        // Recebe o utilizador, o token de redefinição e a nova senha.
+        // Retorna um IdentityResult indicando se a redefinição da senha foi bem-sucedida ou se ocorreram erros.
+        Task<IdentityResult> ResetPasswordAsync(User user, string token, string password);
+
     }
 }

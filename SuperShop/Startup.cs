@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vereyon.Web;
 
 namespace SuperShop
 {
@@ -99,6 +100,17 @@ namespace SuperShop
             {   //Aqui vai buscar a connectionString que temos no ficheiro appsettings.json
                 cfg.UseSqlServer(this.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            // Configura o serviço de mensagens flash no ASP.NET Core.
+            // Este método é utilizado para adicionar e configurar a funcionalidade de flash messages
+            // na aplicação. As flash messages são utilizadas para exibir mensagens temporárias
+            // ao utilizador, como notificações de sucesso, erro, ou alertas, que aparecem após uma operação
+            // e desaparecem após o primeiro carregamento da página seguinte.
+            // 
+            // Nota: AddFlashMessage() não é um método nativo do ASP.NET Core, pelo que deve ser 
+            // parte de uma biblioteca de terceiros ou uma extensão personalizada.
+            services.AddFlashMessage();
+
             //Aqui na pratica estamos a fazer o seguinte quando alguem perguntar pelo SeedDb ele vai cria-lo
             //Usamos o AddTransient pois so vai ser usado uma vez e depois de usado deixa de estar em memoria 
             //Este é criado e depois desaparece

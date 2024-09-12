@@ -5,6 +5,7 @@ using SuperShop.Data;
 using SuperShop.Models;
 using System.Threading.Tasks;
 using System;
+using Vereyon.Web;
 
 namespace SuperShop.Controllers
 {
@@ -13,17 +14,18 @@ namespace SuperShop.Controllers
     public class CountriesController : Controller
     {
         private readonly ICountryRepository _countryRepository;
-        //private readonly IFlashMessage _flashMessage;
+        private readonly IFlashMessage _flashMessage;
 
         // O construtor do controlador recebe duas dependências: ICountryRepository para acesso a dados sobre países e cidades,
         // e IFlashMessage para mensagens de feedback para o utilizador.
         //Ctrl  + . em cima do countryRepository e clicar em "Create and assign field countryRepository"
+        //Ctrl  + . em cima do flashMessage e clicar em "Create and assign field flashMessage"
         public CountriesController(
-            ICountryRepository countryRepository
-            /*IFlashMessage flashMessage*/)
+            ICountryRepository countryRepository,
+            IFlashMessage flashMessage)
         {
             _countryRepository = countryRepository;
-            //_flashMessage = flashMessage;
+            _flashMessage = flashMessage;
         }
 
         // Ação para excluir uma cidade com base no Id fornecido.
@@ -159,20 +161,42 @@ namespace SuperShop.Controllers
             return View(); // Exibe o formulário de criação de um novo país.
         }
 
-        // Ação POST para criar um novo país com base no modelo fornecido.
-        // Se o modelo for válido, cria o novo país e redireciona para a lista de países.
-        // Se o modelo não for válido ou ocorrer uma exceção (por exemplo, se o país já existir), exibe novamente o formulário de criação com erros.
+        // Ação HTTP POST que lida com a criação de um novo país.
+        // Recebe um objeto do tipo "Country" como parâmetro, que contém as informações do país a ser criado.
+        // O método "ValidateAntiForgeryToken" é usado para proteger contra ataques CSRF (Cross-Site Request Forgery).
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Country country)
         {
+            // Verifica se o modelo é válido, ou seja, se todas as validações definidas no modelo "Country" foram satisfeitas.
             if (ModelState.IsValid)
             {
-                await _countryRepository.CreateAsync(country);
-                return RedirectToAction(nameof(Index)); // Redireciona para a lista de países.
+                try
+                {
+                    // Tenta criar o novo país no repositório através do método "CreateAsync" que foi implementado no repositório.
+                    // Este método insere o novo país na base de dados.
+                    await _countryRepository.CreateAsync(country);
+
+                    // Se a criação for bem-sucedida, o utilizador é redirecionado para a ação "Index",
+                    // que provavelmente lista todos os países existentes.
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception)
+                {
+                    // Se ocorrer uma exceção durante a criação, como por exemplo, se o país já existir,
+                    // uma mensagem de erro é exibida ao utilizador através do mecanismo de flash messages.
+                    // A mensagem indica que o país já existe.
+                    _flashMessage.Danger("Este país já existe!");
+                }
+
+                // Se ocorrer uma exceção, o formulário de criação é exibido novamente,
+                // permitindo ao utilizador corrigir os erros ou tentar criar o país novamente.
+                return View(country);
             }
 
-            return View(country); // Exibe o formulário de criação se o modelo não for válido.
+            // Se o modelo não for válido, ou seja, se as validações falharem,
+            // o formulário de criação é exibido novamente com os erros de validação destacados.
+            return View(country);
         }
 
         // Ação para exibir o formulário de edição de um país com base no Id fornecido.

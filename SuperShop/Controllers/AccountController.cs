@@ -439,6 +439,109 @@ namespace SuperShop.Controllers
             return View(); // Retorna a vista padrão, que pode ser personalizada para mostrar o resultado da confirmação.
         }
 
+        // Exibe a vista para recuperação de senha.
+        //Depois de elaborado esta action temos que criar a respectiva View para o RecoverPassword para isso
+        //clicamos com o botao direito sobre RecoverPassword() e fazemos Add View - Razor View - Add
+        public IActionResult RecoverPassword()
+        {
+            return View();
+        }
+
+        // Método que processa a solicitação de recuperação de senha.
+        // Recebe um modelo contendo o email do utilizador para o qual a senha deve ser recuperada.
+        [HttpPost]
+        public async Task<IActionResult> RecoverPassword(RecoverPasswordViewModel model)
+        {
+            // Verifica se o modelo está válido (i.e., se todos os campos obrigatórios estão corretamente preenchidos).
+            if (this.ModelState.IsValid)
+            {
+                // Obtém o utilizador com base no email fornecido pelo modelo.
+                var user = await _userHelper.GetUserByEmailAsync(model.Email);
+
+                // Se o utilizador não for encontrado (email não corresponde a nenhum utilizador registado).
+                if (user == null)
+                {
+                    // Adiciona uma mensagem de erro ao estado do modelo.
+                    ModelState.AddModelError(string.Empty, "O email não corresponde a um utilizador registado.");
+                    // Retorna a vista com o modelo atual para que o utilizador possa corrigir os erros.
+                    return View(model);
+                }
+
+                // Gera um token de redefinição de senha para o utilizador.
+                var myToken = await _userHelper.GeneratePasswordResetTokenAsync(user);
+
+                // Cria um link para a página de redefinição de senha, incluindo o token gerado.
+                var link = this.Url.Action(
+                    "ResetPassword",
+                    "Account",
+                    new { token = myToken }, protocol: HttpContext.Request.Scheme);
+
+                // Envia um email ao utilizador com um link para redefinir a senha.
+                Response response = _mailHelper.SendEmail(model.Email, "Redefinição de Senha da Loja", $"<h1>Redefinição de Senha</h1>" +
+                $"Para redefinir a sua senha, clique neste link:</br></br>" +
+                $"<a href = \"{link}\">Redefinir Senha</a>");
+
+                // Verifica se o email foi enviado com sucesso.
+                if (response.IsSuccess)
+                {
+                    // Adiciona uma mensagem de sucesso ao ViewBag para ser exibida na vista.
+                    this.ViewBag.Message = "As instruções para recuperar a sua senha foram enviadas para o email.";
+                }
+
+                // Retorna a vista sem o modelo para mostrar a mensagem de sucesso.
+                return this.View();
+            }
+
+            // Se o modelo não for válido, retorna a vista com o modelo atual para que o utilizador possa corrigir os erros.
+            return this.View(model);
+        }
+
+        // Exibe a vista para redefinir a senha.
+        // Recebe o token de redefinição de senha como parâmetro.
+        //Depois de elaborado esta action temos que criar a respectiva View para o ResetPassword para isso
+        //clicamos com o botao direito sobre ResetPassword() e fazemos Add View - Razor View - Add
+        public IActionResult ResetPassword(string token)
+        {
+            // Passa o token para a vista para ser usado na redefinição de senha.
+            return View();
+        }
+
+        // Método que processa a solicitação de redefinição de senha.
+        // Recebe um modelo contendo o nome de utilizador, a nova senha, a confirmação da nova senha e o token de redefinição.
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            // Obtém o utilizador com base no nome de utilizador fornecido.
+            var user = await _userHelper.GetUserByEmailAsync(model.UserName);
+
+            // Se o utilizador for encontrado.
+            if (user != null)
+            {
+                // Tenta redefinir a senha do utilizador usando o token e a nova senha fornecidos.
+                var result = await _userHelper.ResetPasswordAsync(user, model.Token, model.Password);
+
+                // Verifica se a redefinição de senha foi bem-sucedida.
+                if (result.Succeeded)
+                {
+                    // Adiciona uma mensagem de sucesso ao ViewBag para ser exibida na vista.
+                    this.ViewBag.Message = "A redefinição da senha foi bem-sucedida.";
+                    // Retorna a vista de sucesso após a redefinição.
+                    return View();
+                }
+
+                // Se houver um erro durante a redefinição da senha, adiciona uma mensagem de erro ao ViewBag.
+                this.ViewBag.Message = "Erro ao redefinir a senha.";
+                // Retorna a vista com o modelo atual para mostrar os erros.
+                return View(model);
+            }
+
+            // Se o utilizador não for encontrado, adiciona uma mensagem de erro ao ViewBag.
+            this.ViewBag.Message = "Utilizador não encontrado.";
+            // Retorna a vista com o modelo atual para mostrar os erros.
+            return View(model);
+        }
+
+
 
 
         //Este action é só para mostrar a página do NotAuthorized

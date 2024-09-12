@@ -1,0 +1,13 @@
+﻿<script>
+    // Sobrescreve o método 'number' do plugin jQuery Validation para personalizar a validação de números.
+    $.validator.methods.number = function (value, element) {
+        // O método retorna 'true' se o campo for opcional e estiver vazio,
+        // ou se o valor do campo puder ser convertido para um número usando Globalize.parseFloat().
+        // Caso contrário, retorna 'false', indicando que a validação falhou.
+
+        return this.optional(element) || !isNaN(Globalize.parseFloat(value));
+        // 'this.optional(element)' verifica se o campo é opcional.
+        // 'Globalize.parseFloat(value)' tenta converter o valor para um número, considerando o formato regional.
+        // '!isNaN(...)' garante que o valor é um número válido.
+    }
+</script>

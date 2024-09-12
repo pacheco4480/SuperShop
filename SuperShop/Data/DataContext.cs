@@ -49,6 +49,41 @@ namespace SuperShop.Data
         
         }
 
+        // Método OnModelCreating é utilizado para personalizar o mapeamento das entidades para o banco de dados.
+        // Aqui, podemos configurar restrições, índices e tipos de dados específicos para colunas
+        // substituindo o tipo de dados que sao criados por padaro.
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Configura um índice único na coluna Name da tabela Countries.
+            // Isto garante que não existam países com nomes duplicados.
+            modelBuilder.Entity<Country>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+
+            // Configura o tipo de dados da coluna Price na tabela Products.
+            // O tipo decimal(18,2) indica que o preço terá até 18 dígitos no total, com 2 casas decimais.
+            modelBuilder.Entity<Product>()
+                .Property(p => p.Price)
+                .HasColumnType("decimal(18,2)");
+
+            // Configura o tipo de dados da coluna Price na tabela OrderDetailsTemp.
+            // O tipo decimal(18,2) é usado para garantir a precisão dos valores de preços.
+            modelBuilder.Entity<OrderDetailTemp>()
+               .Property(p => p.Price)
+               .HasColumnType("decimal(18,2)");
+
+            // Configura o tipo de dados da coluna Price na tabela OrderDetails.
+            // O tipo decimal(18,2) é consistente para todas as tabelas que lidam com preços.
+            modelBuilder.Entity<OrderDetail>()
+              .Property(p => p.Price)
+              .HasColumnType("decimal(18,2)");
+
+            // Chama o método base OnModelCreating da classe IdentityDbContext para garantir que
+            // as configurações padrão do Identity também sejam aplicadas.
+            base.OnModelCreating(modelBuilder);
+        }
+
+
         // Habilitar a regra de apagar em cascata (Cascade Delete Rule)
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{

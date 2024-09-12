@@ -88,6 +88,12 @@ namespace SuperShop.Helpers
             return await _userManager.GenerateEmailConfirmationTokenAsync(user);
         }
 
+        public async Task<string> GeneratePasswordResetTokenAsync(User user)
+        {
+            return await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        }
+
         // Método assíncrono para obter um utilizador pelo endereço de email.
         // Retorna o objeto User correspondente ao email fornecido, ou null se o utilizador não for encontrado.
         public async Task<User> GetUserByEmailAsync(string email)
@@ -126,6 +132,11 @@ namespace SuperShop.Helpers
         public async Task LogoutAsync()
         {
             await _signInManager.SignOutAsync();
+        }
+
+        public async Task<IdentityResult> ResetPasswordAsync(User user, string token, string password)
+        {
+            return await _userManager.ResetPasswordAsync(user, token, password);
         }
 
         // Método assíncrono para atualizar as informações de um utilizador.
