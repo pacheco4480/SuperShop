@@ -23,7 +23,9 @@ namespace SuperShop.Prism
            
             InitializeComponent();
 
-            await NavigationService.NavigateAsync("NavigationPage/ProductsPage");
+
+            await NavigationService.NavigateAsync
+                ($"/{nameof(SuperShopMasterDetailPage)}/NavigationPage/{nameof(ProductsPage)}");
         }
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
